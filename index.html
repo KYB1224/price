@@ -45,11 +45,26 @@
     <section id="tab-search" class="space-y-4 hidden">
       <div class="relative">
         <i data-lucide="search" class="absolute left-4 top-4 text-slate-400 w-6 h-6"></i>
-        <input type="text" id="searchInput" oninput="renderRecords()" placeholder="搜尋商品名稱 (例: 牛奶、衛生紙)..."
+        <input type="text" id="searchInput" oninput="renderRecords()" placeholder="搜尋商品名稱或備註..."
                class="w-full pl-12 pr-4 py-4 rounded-2xl border-0 shadow-sm text-slate-700 bg-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 text-lg font-bold">
       </div>
 
-      <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="categoryPills"></div>
+      <!-- 雙維度分類切換按鈕 (類別 / 通路) -->
+      <div class="space-y-2">
+        <div class="flex gap-2 p-1 bg-slate-200/60 rounded-2xl">
+          <button onclick="switchFilterDimension('category')" id="dim-btn-category"
+                  class="flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-sky-700 shadow-sm">
+            📦 按商品類別
+          </button>
+          <button onclick="switchFilterDimension('store')" id="dim-btn-store"
+                  class="flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800">
+            🏪 按購買通路
+          </button>
+        </div>
+
+        <!-- 動態標籤列 (對齊修復與滾動優化) -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5" id="filterPills"></div>
+      </div>
 
       <div class="flex justify-between items-center text-sm text-slate-500 px-1 font-bold">
         <span id="recordCountText">共 0 筆比價紀錄</span>
@@ -64,7 +79,6 @@
         <form id="priceForm" onsubmit="saveRecord(event)" class="space-y-4">
           
           <div class="grid grid-cols-2 gap-3">
-            <!-- 自訂帶 Logo 的通路下拉選單 (新增表單) -->
             <div class="relative">
               <label class="block text-sm font-black text-slate-600 mb-1.5">通路</label>
               <input type="hidden" id="inputStore" value="全聯">
@@ -157,7 +171,7 @@
       </div>
     </section>
 
-    <!-- TAB 4: Dashboard / Trend Analysis View -->
+    <!-- TAB 4: Dashboard View -->
     <section id="tab-dashboard" class="space-y-4 hidden">
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
         <div class="flex justify-between items-center">
@@ -188,6 +202,37 @@
       </div>
     </section>
   </main>
+
+  <!-- 通路管理 Modal -->
+  <div id="storeManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-sky-600"></i> 管理自訂通路
+        </h3>
+        <button onclick="toggleStoreManageModal(false)" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- 新增/修改區塊 -->
+      <div class="space-y-2 shrink-0 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+        <input type="text" id="newStoreNameInput" placeholder="通路名稱 (例: 美廉社)" class="w-full p-2.5 bg-white rounded-xl text-sm font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
+        <input type="url" id="newStoreLogoInput" placeholder="Logo 圖片網址 (選填，可之後再補)" class="w-full p-2.5 bg-white rounded-xl text-xs font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
+        <div class="flex gap-2 pt-1">
+          <button id="addStoreSubmitBtn" onclick="addCustomStore()" class="w-full bg-sky-600 text-white text-xs py-2.5 rounded-xl font-bold hover:bg-sky-700 transition">
+            新增通路
+          </button>
+          <button id="cancelEditStoreBtn" onclick="resetStoreInputForm()" class="hidden w-1/3 bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-bold hover:bg-slate-300 transition">
+            取消
+          </button>
+        </div>
+      </div>
+
+      <!-- 通路列表區塊 -->
+      <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="storeManageList"></div>
+    </div>
+  </div>
 
   <!-- 家人共用 Modal -->
   <div id="familyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -243,7 +288,6 @@
         <input type="hidden" id="editId">
 
         <div class="grid grid-cols-2 gap-3">
-          <!-- 自訂帶 Logo 的通路下拉選單 (編輯 Modal) -->
           <div class="relative">
             <label class="block text-xs font-black text-slate-600 mb-1">通路</label>
             <input type="hidden" id="editStore" value="全聯">
@@ -360,15 +404,18 @@
     }
 
     let records = [];
+    let cloudStoresList = []; 
+    let currentDimension = "category"; 
     let activeCategory = "全部";
+    let activeStore = "全部";
+
     const categories = ["全部", "肉品", "蔬菜", "餅乾", "飲料/沖泡粉", "乾糧/罐頭", "冷藏/冷凍", "清潔用品", "保養/美妝", "生活用品", "藥品/保健品", "其他"];
 
-    const storeOptionsList = [
+    const defaultStores = [
       "全聯", "萬家福", "愛買", "百興隆", "蝦皮", "北海道", "開南食品", "大發", "Costco", "7-ELEVEN", "全家", "傳統市場", "其他"
     ];
 
-    // 通路品牌 Logo 圖示對應表
-    const storeIcons = {
+    const defaultStoreIcons = {
       "大發": "https://i.meee.com.tw/ns6tytm.png",
       "開南食品": "https://i.meee.com.tw/ZOdqqDG.jpg",
       "百興隆": "https://i.meee.com.tw/m7aoD2H.jpg",
@@ -401,6 +448,32 @@
       if (headerLabel) headerLabel.innerText = code;
     }
 
+    function getStoreOptionsList() {
+      if (cloudStoresList.length > 0) {
+        return cloudStoresList.map(s => s.name);
+      }
+      const saved = localStorage.getItem('custom_store_list');
+      if (saved) {
+        try { return JSON.parse(saved); } catch(e) {}
+      }
+      return [...defaultStores];
+    }
+
+    function getStoreLogoUrl(storeName) {
+      if (cloudStoresList.length > 0) {
+        const found = cloudStoresList.find(s => s.name === storeName);
+        if (found && found.logo_url) return found.logo_url;
+      }
+      const savedIcons = localStorage.getItem('custom_store_icons');
+      if (savedIcons) {
+        try {
+          const map = JSON.parse(savedIcons);
+          if (map[storeName]) return map[storeName];
+        } catch(e) {}
+      }
+      return defaultStoreIcons[storeName] || defaultStoreIcons["預設"];
+    }
+
     function formatWesternDate(dateStr) {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
@@ -414,28 +487,129 @@
     window.onload = function() {
       lucide.createIcons();
       updateGroupUI();
-      buildCustomDropdown('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', '全聯');
-
+      
       const dateEl = document.getElementById('inputDate');
       if (dateEl) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        dateEl.value = todayStr;
+        dateEl.value = new Date().toISOString().split('T')[0];
       }
 
-      renderCategoryPills();
-      calculateUnitPrice();
-      checkDealAlert();
-      fetchRecords();
+      fetchStoresAndRecords();
       registerServiceWorker();
     };
 
-    // 建立自訂下拉選單內容
+    async function fetchStoresAndRecords() {
+      await fetchCustomStoresFromCloud();
+      await fetchRecords();
+    }
+
+    async function fetchCustomStoresFromCloud() {
+      const currentGroup = getCurrentGroupCode();
+      if (!db) return;
+
+      try {
+        const { data, error } = await db.from('store_options').select('*').eq('group_code', currentGroup).order('id', { ascending: true });
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          cloudStoresList = data.map(d => ({ name: d.name, logo_url: d.logo_url || '', id: d.id }));
+        } else {
+          cloudStoresList = defaultStores.map(s => ({ name: s, logo_url: defaultStoreIcons[s] || '' }));
+          for (let s of cloudStoresList) {
+            await db.from('store_options').insert([{ group_code: currentGroup, name: s.name, logo_url: s.logo_url }]);
+          }
+        }
+      } catch (err) {
+        console.log("讀取雲端通路失敗，使用本機快取:", err);
+      }
+
+      refreshDropdownsAfterManage();
+      renderFilterPills();
+    }
+
+    function switchFilterDimension(dim) {
+      currentDimension = dim;
+      const catBtn = document.getElementById('dim-btn-category');
+      const storeBtn = document.getElementById('dim-btn-store');
+
+      if (dim === 'category') {
+        catBtn.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-sky-700 shadow-sm";
+        storeBtn.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800";
+      } else {
+        storeBtn.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 bg-white text-sky-700 shadow-sm";
+        catBtn.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-800";
+      }
+
+      renderFilterPills();
+      renderRecords();
+    }
+
+    function renderFilterPills() {
+      const container = document.getElementById('filterPills');
+      if (!container) return;
+
+      if (currentDimension === 'category') {
+        container.innerHTML = categories.map(cat => `
+          <button onclick="selectCategory('${cat}')"
+                  class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm ${
+                    activeCategory === cat 
+                      ? 'bg-emerald-600 text-white shadow-md' 
+                      : 'bg-white text-slate-600 border border-slate-200'
+                  }">
+            ${cat}
+          </button>
+        `).join('');
+      } else {
+        const stores = ["全部", ...getStoreOptionsList()];
+        container.innerHTML = stores.map(store => {
+          const isSelected = (activeStore === store);
+          if (store === "全部") {
+            return `
+              <button onclick="selectStore('全部')"
+                      class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm ${
+                        isSelected 
+                          ? 'bg-sky-600 text-white shadow-md' 
+                          : 'bg-white text-slate-600 border border-slate-200'
+                      }">
+                全部
+              </button>
+            `;
+          }
+
+          const logoUrl = getStoreLogoUrl(store);
+          return `
+            <button onclick="selectStore('${store}')"
+                    class="px-3 py-1.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm flex items-center gap-1.5 shrink-0 ${
+                      isSelected 
+                        ? 'bg-sky-600 text-white shadow-md' 
+                        : 'bg-white text-slate-600 border border-slate-200'
+                    }">
+              <img src="${logoUrl}" class="w-4 h-4 rounded-full object-cover shrink-0 border border-slate-100">
+              <span class="truncate max-w-[100px]">${store}</span>
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function selectCategory(cat) {
+      activeCategory = cat;
+      renderFilterPills();
+      renderRecords();
+    }
+
+    function selectStore(store) {
+      activeStore = store;
+      renderFilterPills();
+      renderRecords();
+    }
+
     function buildCustomDropdown(dropdownId, hiddenInputId, labelId, selectedValue) {
       const dropdown = document.getElementById(dropdownId);
       if (!dropdown) return;
 
-      dropdown.innerHTML = storeOptionsList.map(store => {
-        const logo = storeIcons[store] || storeIcons["預設"];
+      const currentList = getStoreOptionsList();
+      const listHtml = currentList.map(store => {
+        const logo = getStoreLogoUrl(store);
         const isSelected = (store === selectedValue);
         return `
           <div onclick="selectCustomOption('${dropdownId}', '${hiddenInputId}', '${labelId}', '${store}')"
@@ -445,11 +619,20 @@
           </div>
         `;
       }).join('');
+
+      const manageBtnHtml = `
+        <div onclick="openStoreManageModal('${dropdownId}', '${hiddenInputId}', '${labelId}')" 
+             class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-3 text-center text-xs font-black text-sky-600 border-t border-slate-100 cursor-pointer flex items-center justify-center gap-1.5">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i> 管理 / 新增通路
+        </div>
+      `;
+
+      dropdown.innerHTML = listHtml + manageBtnHtml;
+      lucide.createIcons();
     }
 
     function toggleCustomDropdown(dropdownId, event) {
       if (event) event.stopPropagation();
-      // 關閉其他下拉
       ['addStoreDropdown', 'editStoreDropdown'].forEach(id => {
         if (id !== dropdownId) document.getElementById(id)?.classList.add('hidden');
       });
@@ -459,7 +642,7 @@
 
     function selectCustomOption(dropdownId, hiddenInputId, labelId, storeName) {
       document.getElementById(hiddenInputId).value = storeName;
-      const logo = storeIcons[storeName] || storeIcons["預設"];
+      const logo = getStoreLogoUrl(storeName);
       document.getElementById(labelId).innerHTML = `
         <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0"> ${storeName}
       `;
@@ -474,6 +657,134 @@
         document.getElementById('addStoreDropdown')?.classList.add('hidden');
         document.getElementById('editStoreDropdown')?.classList.add('hidden');
       }
+    }
+
+    let editingStoreTarget = null;
+
+    function openStoreManageModal(dropdownId, hiddenInputId, labelId) {
+      document.getElementById('addStoreDropdown')?.classList.add('hidden');
+      document.getElementById('editStoreDropdown')?.classList.add('hidden');
+      resetStoreInputForm();
+      renderStoreManageList();
+      toggleStoreManageModal(true);
+    }
+
+    function toggleStoreManageModal(show) {
+      document.getElementById('storeManageModal').classList.toggle('hidden', !show);
+    }
+
+    function renderStoreManageList() {
+      const container = document.getElementById('storeManageList');
+      if (!container) return;
+
+      const list = getStoreOptionsList();
+      container.innerHTML = list.map(store => {
+        const logo = getStoreLogoUrl(store);
+        return `
+          <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div class="flex items-center gap-2.5 font-bold text-slate-700 text-sm truncate pr-2">
+              <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">
+              <span class="truncate">${store}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="startEditStore('${store}')" class="text-slate-400 hover:text-sky-600 p-1.5 transition" title="編輯 Logo 或名稱">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="removeCustomStore('${store}')" class="text-slate-400 hover:text-rose-500 p-1.5 transition" title="刪除">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function startEditStore(storeName) {
+      editingStoreTarget = storeName;
+      const currentLogo = getStoreLogoUrl(storeName);
+      const isDefaultLogo = Object.values(defaultStoreIcons).includes(currentLogo);
+
+      document.getElementById('newStoreNameInput').value = storeName;
+      document.getElementById('newStoreLogoInput').value = isDefaultLogo ? '' : currentLogo;
+
+      document.getElementById('addStoreSubmitBtn').innerText = '儲存修改';
+      document.getElementById('cancelEditStoreBtn').classList.remove('hidden');
+    }
+
+    function resetStoreInputForm() {
+      editingStoreTarget = null;
+      document.getElementById('newStoreNameInput').value = '';
+      document.getElementById('newStoreLogoInput').value = '';
+      document.getElementById('addStoreSubmitBtn').innerText = '新增通路';
+      document.getElementById('cancelEditStoreBtn').classList.add('hidden');
+    }
+
+    async function addCustomStore() {
+      const nameInput = document.getElementById('newStoreNameInput');
+      const logoInput = document.getElementById('newStoreLogoInput');
+
+      const newName = nameInput.value.trim();
+      const newLogo = logoInput.value.trim();
+      const currentGroup = getCurrentGroupCode();
+
+      if (!newName) {
+        alert('請輸入通路名稱！');
+        return;
+      }
+
+      let currentList = getStoreOptionsList();
+
+      if (editingStoreTarget) {
+        if (db) {
+          try {
+            await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('group_code', currentGroup).eq('name', editingStoreTarget);
+          } catch(e) { console.error("雲端更新通路失敗", e); }
+        }
+      } else {
+        if (currentList.includes(newName)) {
+          alert('此通路名稱已存在！');
+          return;
+        }
+
+        if (db) {
+          try {
+            await db.from('store_options').insert([{ group_code: currentGroup, name: newName, logo_url: newLogo }]);
+          } catch(e) { console.error("雲端新增通路失敗", e); }
+        }
+      }
+
+      await fetchCustomStoresFromCloud();
+      resetStoreInputForm();
+      renderStoreManageList();
+    }
+
+    async function removeCustomStore(storeName) {
+      if (!confirm(`確定要移除「${storeName}」嗎？`)) return;
+      const currentGroup = getCurrentGroupCode();
+
+      if (db) {
+        try {
+          await db.from('store_options').delete().eq('group_code', currentGroup).eq('name', storeName);
+        } catch(e) { console.error("雲端刪除通路失敗", e); }
+      }
+
+      await fetchCustomStoresFromCloud();
+      renderStoreManageList();
+    }
+
+    function refreshDropdownsAfterManage() {
+      const list = getStoreOptionsList();
+      const currentAddStore = document.getElementById('inputStore').value;
+      const currentEditStore = document.getElementById('editStore').value;
+
+      const safeAddStore = list.includes(currentAddStore) ? currentAddStore : (list[0] || '全聯');
+      selectCustomOption('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', safeAddStore);
+      buildCustomDropdown('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', safeAddStore);
+
+      const safeEditStore = list.includes(currentEditStore) ? currentEditStore : (list[0] || '全聯');
+      selectCustomOption('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', safeEditStore);
+      buildCustomDropdown('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', safeEditStore);
     }
 
     async function fetchRecords() {
@@ -504,27 +815,6 @@
       }
     }
 
-    function renderCategoryPills() {
-      const container = document.getElementById('categoryPills');
-      if (!container) return;
-      container.innerHTML = categories.map(cat => `
-        <button onclick="selectCategory('${cat}')"
-                class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm ${
-                  activeCategory === cat 
-                    ? 'bg-emerald-600 text-white shadow-md' 
-                    : 'bg-white text-slate-600 border border-slate-200'
-                }">
-          ${cat}
-        </button>
-      `).join('');
-    }
-
-    function selectCategory(cat) {
-      activeCategory = cat;
-      renderCategoryPills();
-      renderRecords();
-    }
-
     function getMinUnitPriceMap() {
       const minMap = {};
       records.forEach(r => {
@@ -548,9 +838,18 @@
       const minMap = getMinUnitPriceMap();
 
       const filtered = records.filter(r => {
-        const matchCategory = (activeCategory === "全部") || (r.category === activeCategory);
-        const matchSearch = !searchKeyword || (r.name && r.name.toLowerCase().includes(searchKeyword));
-        return matchCategory && matchSearch;
+        let matchFilter = true;
+        if (currentDimension === 'category') {
+          matchFilter = (activeCategory === "全部") || (r.category === activeCategory);
+        } else {
+          matchFilter = (activeStore === "全部") || (r.store === activeStore);
+        }
+
+        const matchSearch = !searchKeyword || 
+          (r.name && r.name.toLowerCase().includes(searchKeyword)) ||
+          (r.note && r.note.toLowerCase().includes(searchKeyword));
+
+        return matchFilter && matchSearch;
       });
 
       const countText = document.getElementById('recordCountText');
@@ -560,7 +859,7 @@
       if (!listContainer) return;
 
       if (filtered.length === 0) {
-        listContainer.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl text-sm font-bold text-slate-400">尚無紀錄</div>`;
+        listContainer.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl text-sm font-bold text-slate-400">尚無相關紀錄</div>`;
         return;
       }
 
@@ -569,7 +868,7 @@
         const minObj = minMap[r.name.trim()];
         const isLowest = minObj && Math.abs(numPrice - minObj.val) < 0.0001;
         const displayDate = formatWesternDate(r.date);
-        const logoUrl = storeIcons[r.store] || storeIcons["預設"];
+        const logoUrl = getStoreLogoUrl(r.store);
 
         return `
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2.5 relative overflow-hidden">
@@ -624,7 +923,7 @@
       document.getElementById('editId').value = record.id;
       document.getElementById('editStore').value = storeVal;
       
-      const logo = storeIcons[storeVal] || storeIcons["預設"];
+      const logo = getStoreLogoUrl(storeVal);
       document.getElementById('editStoreSelectedLabel').innerHTML = `
         <img src="${logo}" class="w-4 h-4 rounded-full object-cover shrink-0"> ${storeVal}
       `;
@@ -812,8 +1111,8 @@
       const dateEl = document.getElementById('inputDate');
       if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
       
-      // 重設通路選擇為全聯
-      selectCustomOption('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', '全聯');
+      const defaultStore = getStoreOptionsList()[0] || '全聯';
+      selectCustomOption('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', defaultStore);
       document.getElementById('inputCategory').value = "生活用品";
       document.getElementById('inputUnit').value = "ml";
 
@@ -854,15 +1153,15 @@
         .sort((a, b) => b.wins - a.wins);
 
       container.innerHTML = sortedStores.map((item) => {
-        const logoUrl = storeIcons[item.store] || storeIcons["預設"];
+        const logoUrl = getStoreLogoUrl(item.store);
         return `
           <div class="space-y-2 text-sm bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
             <div class="flex justify-between items-center font-black text-slate-800 text-base">
-              <span class="flex items-center gap-2.5">
+              <span class="flex items-center gap-2.5 truncate pr-2">
                 <img src="${logoUrl}" alt="${item.store}" class="w-6 h-6 rounded-full object-cover inline-block shrink-0 shadow-sm border border-slate-200">
-                <span class="text-base">${item.store}</span>
+                <span class="text-base truncate">${item.store}</span>
               </span>
-              <span class="text-emerald-600 font-black text-base">${item.wins} 項歷史最低 (${item.rate}%)</span>
+              <span class="text-emerald-600 font-black text-base shrink-0">${item.wins} 項歷史最低 (${item.rate}%)</span>
             </div>
             <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
               <div class="bg-emerald-500 h-3 rounded-full transition-all duration-500" style="width: ${item.rate}%"></div>
@@ -971,14 +1270,19 @@
       updateGroupUI();
       alert(`已成功切換群組至 [${upperCode}]！`);
       toggleFamilyModal(false);
-      fetchRecords();
+      fetchStoresAndRecords();
     }
 
     function registerServiceWorker() {
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
         const swCode = `
           self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => self.clients.claim());
+          self.addEventListener('activate', e => {
+            e.waitUntil(
+              caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
+            );
+            return self.clients.claim();
+          });
           self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
         const blob = new Blob([swCode], { type: 'text/javascript' });
