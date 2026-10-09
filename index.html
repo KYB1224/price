@@ -201,7 +201,7 @@
     </section>
   </main>
 
-  <!-- 通路管理 Modal (含排序調整) -->
+  <!-- 通路管理 Modal -->
   <div id="storeManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
       <div class="flex justify-between items-center shrink-0">
@@ -400,7 +400,7 @@
     }
 
     let records = [];
-    let cloudStoresList = []; 
+    let cloudStoresList = []; // 存 [{id, name, logo_url}]
     let currentDimension = "category"; 
     let activeCategory = "全部";
     let activeStore = "全部";
@@ -448,10 +448,6 @@
       if (cloudStoresList.length > 0) {
         return cloudStoresList.map(s => s.name);
       }
-      const saved = localStorage.getItem('custom_store_list');
-      if (saved) {
-        try { return JSON.parse(saved); } catch(e) {}
-      }
       return [...defaultStores];
     }
 
@@ -459,13 +455,6 @@
       if (cloudStoresList.length > 0) {
         const found = cloudStoresList.find(s => s.name === storeName);
         if (found && found.logo_url) return found.logo_url;
-      }
-      const savedIcons = localStorage.getItem('custom_store_icons');
-      if (savedIcons) {
-        try {
-          const map = JSON.parse(savedIcons);
-          if (map[storeName]) return map[storeName];
-        } catch(e) {}
       }
       return defaultStoreIcons[storeName] || defaultStoreIcons["預設"];
     }
@@ -505,20 +494,22 @@
       try {
         const { data, error } = await db.from('store_options').select('*').eq('group_code', currentGroup).order('id', { ascending: true });
         if (error) {
-          console.error("雲端讀取通路失敗，降級為本機模式:", error.message);
+          console.error("雲端讀取通路失敗:", error.message);
           return;
         }
 
         if (data && data.length > 0) {
-          cloudStoresList = data.map(d => ({ name: d.name, logo_url: d.logo_url || '', id: d.id }));
+          cloudStoresList = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
         } else {
-          cloudStoresList = defaultStores.map(s => ({ name: s, logo_url: defaultStoreIcons[s] || '' }));
-          for (let s of cloudStoresList) {
-            await db.from('store_options').insert([{ group_code: currentGroup, name: s.name, logo_url: s.logo_url }]);
+          // 若無資料，批次插入預設清單
+          const initBatch = defaultStores.map(s => ({ group_code: currentGroup, name: s, logo_url: defaultStoreIcons[s] || '' }));
+          const { data: insertedData } = await db.from('store_options').insert(initBatch).select();
+          if (insertedData) {
+            cloudStoresList = insertedData.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
           }
         }
       } catch (err) {
-        console.log("讀取雲端通路例外，使用本機快取:", err);
+        console.log("讀取雲端通路例外:", err);
       }
 
       refreshDropdownsAfterManage();
@@ -658,7 +649,7 @@
       }
     }
 
-    let editingStoreTarget = null;
+    let editingStoreTargetId = null;
 
     function openStoreManageModal(dropdownId, hiddenInputId, labelId) {
       document.getElementById('addStoreDropdown')?.classList.add('hidden');
@@ -676,26 +667,24 @@
       const container = document.getElementById('storeManageList');
       if (!container) return;
 
-      const list = getStoreOptionsList();
-      container.innerHTML = list.map((store, index) => {
-        const logo = getStoreLogoUrl(store);
+      container.innerHTML = cloudStoresList.map((item, index) => {
         return `
           <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
             <div class="flex items-center gap-2 font-bold text-slate-700 text-sm truncate pr-1">
-              <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">
-              <span class="truncate">${store}</span>
+              <img src="${item.logo_url || defaultStoreIcons['預設']}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">
+              <span class="truncate">${item.name}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <button onclick="moveStorePosition(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="上移">
                 <i data-lucide="arrow-up" class="w-4 h-4"></i>
               </button>
-              <button onclick="moveStorePosition(${index}, 1)" ${index === list.length - 1 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="下移">
+              <button onclick="moveStorePosition(${index}, 1)" ${index === cloudStoresList.length - 1 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="下移">
                 <i data-lucide="arrow-down" class="w-4 h-4"></i>
               </button>
-              <button onclick="startEditStore('${store}')" class="text-slate-400 hover:text-sky-600 p-1 transition" title="編輯 Logo 或名稱">
+              <button onclick="startEditStore(${item.id})" class="text-slate-400 hover:text-sky-600 p-1 transition" title="編輯">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
               </button>
-              <button onclick="removeCustomStore('${store}')" class="text-slate-400 hover:text-rose-500 p-1 transition" title="刪除">
+              <button onclick="removeCustomStoreById(${item.id}, '${item.name}')" class="text-slate-400 hover:text-rose-500 p-1 transition" title="刪除">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -709,23 +698,22 @@
       const targetIndex = index + direction;
       if (targetIndex < 0 || targetIndex >= cloudStoresList.length) return;
 
-      // 交換陣列元素位置
       const temp = cloudStoresList[index];
       cloudStoresList[index] = cloudStoresList[targetIndex];
       cloudStoresList[targetIndex] = temp;
 
-      // 重新繪製管理視窗與主頁面選單
       renderStoreManageList();
       refreshDropdownsAfterManage();
       renderFilterPills();
 
-      // 若已寫入 Supabase，重新清除與重建雲端資料庫中的數據順序
       const currentGroup = getCurrentGroupCode();
       if (db) {
         try {
           await db.from('store_options').delete().eq('group_code', currentGroup);
-          for (let s of cloudStoresList) {
-            await db.from('store_options').insert([{ group_code: currentGroup, name: s.name, logo_url: s.logo_url }]);
+          const newBatch = cloudStoresList.map(s => ({ group_code: currentGroup, name: s.name, logo_url: s.logo_url }));
+          const { data } = await db.from('store_options').insert(newBatch).select();
+          if (data) {
+            cloudStoresList = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
           }
         } catch(e) {
           console.error("更新雲端排序失敗", e);
@@ -733,20 +721,20 @@
       }
     }
 
-    function startEditStore(storeName) {
-      editingStoreTarget = storeName;
-      const currentLogo = getStoreLogoUrl(storeName);
-      const isDefaultLogo = Object.values(defaultStoreIcons).includes(currentLogo);
+    function startEditStore(id) {
+      const item = cloudStoresList.find(s => s.id === id);
+      if (!item) return;
 
-      document.getElementById('newStoreNameInput').value = storeName;
-      document.getElementById('newStoreLogoInput').value = isDefaultLogo ? '' : currentLogo;
+      editingStoreTargetId = id;
+      document.getElementById('newStoreNameInput').value = item.name;
+      document.getElementById('newStoreLogoInput').value = item.logo_url;
 
       document.getElementById('addStoreSubmitBtn').innerText = '儲存修改';
       document.getElementById('cancelEditStoreBtn').classList.remove('hidden');
     }
 
     function resetStoreInputForm() {
-      editingStoreTarget = null;
+      editingStoreTargetId = null;
       document.getElementById('newStoreNameInput').value = '';
       document.getElementById('newStoreLogoInput').value = '';
       document.getElementById('addStoreSubmitBtn').innerText = '新增通路';
@@ -766,28 +754,19 @@
         return;
       }
 
-      let currentList = getStoreOptionsList();
-
-      if (editingStoreTarget) {
+      if (editingStoreTargetId) {
         if (db) {
           try {
-            const { error } = await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('group_code', currentGroup).eq('name', editingStoreTarget);
+            const { error } = await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('id', editingStoreTargetId);
             if (error) alert("雲端更新失敗：" + error.message);
-          } catch(e) { console.error("雲端更新通路失敗", e); }
+          } catch(e) { console.error(e); }
         }
       } else {
-        if (currentList.includes(newName)) {
-          alert('此通路名稱已存在！');
-          return;
-        }
-
-        cloudStoresList.push({ name: newName, logo_url: newLogo });
-
         if (db) {
           try {
             const { error } = await db.from('store_options').insert([{ group_code: currentGroup, name: newName, logo_url: newLogo }]);
             if (error) alert("雲端新增失敗：" + error.message);
-          } catch(e) { console.error("雲端新增通路失敗", e); }
+          } catch(e) { console.error(e); }
         }
       }
 
@@ -796,15 +775,15 @@
       renderStoreManageList();
     }
 
-    async function removeCustomStore(storeName) {
+    // 精準透過資料 ID 進行獨立刪除
+    async function removeCustomStoreById(id, storeName) {
       if (!confirm(`確定要移除「${storeName}」嗎？`)) return;
-      const currentGroup = getCurrentGroupCode();
 
       if (db) {
         try {
-          const { error } = await db.from('store_options').delete().eq('group_code', currentGroup).eq('name', storeName);
+          const { error } = await db.from('store_options').delete().eq('id', id);
           if (error) alert("雲端刪除失敗：" + error.message);
-        } catch(e) { console.error("雲端刪除通路失敗", e); }
+        } catch(e) { console.error(e); }
       }
 
       await fetchCustomStoresFromCloud();
