@@ -34,7 +34,7 @@
           <button onclick="toggleFamilyModal(true)" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-1 border border-amber-200 transition">
             <i data-lucide="users" class="w-3.5 h-3.5"></i> <span id="headerGroupLabel">共用中</span>
           </button>
-          <button onclick="fetchRecords()" class="bg-sky-50/80 text-sky-600 hover:bg-sky-100 text-[11px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-1 border border-sky-200/60 transition">
+          <button onclick="fetchStoresAndRecords()" class="bg-sky-50/80 text-sky-600 hover:bg-sky-100 text-[11px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-1 border border-sky-200/60 transition">
             <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -49,7 +49,6 @@
                class="w-full pl-12 pr-4 py-4 rounded-2xl border-0 shadow-sm text-slate-700 bg-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 text-lg font-bold">
       </div>
 
-      <!-- 雙維度分類切換按鈕 (類別 / 通路) -->
       <div class="space-y-2">
         <div class="flex gap-2 p-1 bg-slate-200/60 rounded-2xl">
           <button onclick="switchFilterDimension('category')" id="dim-btn-category"
@@ -62,7 +61,6 @@
           </button>
         </div>
 
-        <!-- 動態標籤列 (對齊修復與滾動優化) -->
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5" id="filterPills"></div>
       </div>
 
@@ -203,7 +201,7 @@
     </section>
   </main>
 
-  <!-- 通路管理 Modal -->
+  <!-- 通路管理 Modal (含排序調整) -->
   <div id="storeManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
       <div class="flex justify-between items-center shrink-0">
@@ -215,7 +213,6 @@
         </button>
       </div>
 
-      <!-- 新增/修改區塊 -->
       <div class="space-y-2 shrink-0 bg-slate-50 p-3 rounded-2xl border border-slate-100">
         <input type="text" id="newStoreNameInput" placeholder="通路名稱 (例: 美廉社)" class="w-full p-2.5 bg-white rounded-xl text-sm font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
         <input type="url" id="newStoreLogoInput" placeholder="Logo 圖片網址 (選填，可之後再補)" class="w-full p-2.5 bg-white rounded-xl text-xs font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
@@ -229,7 +226,6 @@
         </div>
       </div>
 
-      <!-- 通路列表區塊 -->
       <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="storeManageList"></div>
     </div>
   </div>
@@ -508,7 +504,10 @@
 
       try {
         const { data, error } = await db.from('store_options').select('*').eq('group_code', currentGroup).order('id', { ascending: true });
-        if (error) throw error;
+        if (error) {
+          console.error("雲端讀取通路失敗，降級為本機模式:", error.message);
+          return;
+        }
 
         if (data && data.length > 0) {
           cloudStoresList = data.map(d => ({ name: d.name, logo_url: d.logo_url || '', id: d.id }));
@@ -519,7 +518,7 @@
           }
         }
       } catch (err) {
-        console.log("讀取雲端通路失敗，使用本機快取:", err);
+        console.log("讀取雲端通路例外，使用本機快取:", err);
       }
 
       refreshDropdownsAfterManage();
@@ -678,19 +677,25 @@
       if (!container) return;
 
       const list = getStoreOptionsList();
-      container.innerHTML = list.map(store => {
+      container.innerHTML = list.map((store, index) => {
         const logo = getStoreLogoUrl(store);
         return `
-          <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
-            <div class="flex items-center gap-2.5 font-bold text-slate-700 text-sm truncate pr-2">
+          <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
+            <div class="flex items-center gap-2 font-bold text-slate-700 text-sm truncate pr-1">
               <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">
               <span class="truncate">${store}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button onclick="startEditStore('${store}')" class="text-slate-400 hover:text-sky-600 p-1.5 transition" title="編輯 Logo 或名稱">
+              <button onclick="moveStorePosition(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="上移">
+                <i data-lucide="arrow-up" class="w-4 h-4"></i>
+              </button>
+              <button onclick="moveStorePosition(${index}, 1)" ${index === list.length - 1 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="下移">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+              </button>
+              <button onclick="startEditStore('${store}')" class="text-slate-400 hover:text-sky-600 p-1 transition" title="編輯 Logo 或名稱">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
               </button>
-              <button onclick="removeCustomStore('${store}')" class="text-slate-400 hover:text-rose-500 p-1.5 transition" title="刪除">
+              <button onclick="removeCustomStore('${store}')" class="text-slate-400 hover:text-rose-500 p-1 transition" title="刪除">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -698,6 +703,34 @@
         `;
       }).join('');
       lucide.createIcons();
+    }
+
+    async function moveStorePosition(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= cloudStoresList.length) return;
+
+      // 交換陣列元素位置
+      const temp = cloudStoresList[index];
+      cloudStoresList[index] = cloudStoresList[targetIndex];
+      cloudStoresList[targetIndex] = temp;
+
+      // 重新繪製管理視窗與主頁面選單
+      renderStoreManageList();
+      refreshDropdownsAfterManage();
+      renderFilterPills();
+
+      // 若已寫入 Supabase，重新清除與重建雲端資料庫中的數據順序
+      const currentGroup = getCurrentGroupCode();
+      if (db) {
+        try {
+          await db.from('store_options').delete().eq('group_code', currentGroup);
+          for (let s of cloudStoresList) {
+            await db.from('store_options').insert([{ group_code: currentGroup, name: s.name, logo_url: s.logo_url }]);
+          }
+        } catch(e) {
+          console.error("更新雲端排序失敗", e);
+        }
+      }
     }
 
     function startEditStore(storeName) {
@@ -738,7 +771,8 @@
       if (editingStoreTarget) {
         if (db) {
           try {
-            await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('group_code', currentGroup).eq('name', editingStoreTarget);
+            const { error } = await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('group_code', currentGroup).eq('name', editingStoreTarget);
+            if (error) alert("雲端更新失敗：" + error.message);
           } catch(e) { console.error("雲端更新通路失敗", e); }
         }
       } else {
@@ -747,9 +781,12 @@
           return;
         }
 
+        cloudStoresList.push({ name: newName, logo_url: newLogo });
+
         if (db) {
           try {
-            await db.from('store_options').insert([{ group_code: currentGroup, name: newName, logo_url: newLogo }]);
+            const { error } = await db.from('store_options').insert([{ group_code: currentGroup, name: newName, logo_url: newLogo }]);
+            if (error) alert("雲端新增失敗：" + error.message);
           } catch(e) { console.error("雲端新增通路失敗", e); }
         }
       }
@@ -765,7 +802,8 @@
 
       if (db) {
         try {
-          await db.from('store_options').delete().eq('group_code', currentGroup).eq('name', storeName);
+          const { error } = await db.from('store_options').delete().eq('group_code', currentGroup).eq('name', storeName);
+          if (error) alert("雲端刪除失敗：" + error.message);
         } catch(e) { console.error("雲端刪除通路失敗", e); }
       }
 
