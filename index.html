@@ -137,7 +137,7 @@
                 <span id="addUnitSelectedLabel" class="truncate">ml</span>
                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
               </button>
-              <div id="addUnitDropdown" class="absolute right-0 w-44 mt-1 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[999] max-h-60 overflow-y-auto hidden"></div>
+              <div id="addUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[999] max-h-60 overflow-y-auto hidden"></div>
             </div>
           </div>
 
@@ -361,7 +361,7 @@
               <span id="editUnitSelectedLabel" class="truncate">ml</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
             </button>
-            <div id="editUnitDropdown" class="absolute right-0 w-36 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-[999] max-h-60 overflow-y-auto hidden"></div>
+            <div id="editUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-[999] max-h-60 overflow-y-auto hidden"></div>
           </div>
         </div>
 
@@ -728,10 +728,15 @@
         `;
       }).join('');
 
+      const typeLabelMap = { store: '通路', category: '類別', unit: '單位' };
+      
+      // 根據類別區分：單位用簡短的「⚙️ 管理」，通路與類別維持原本完整的「⚙️ 管理 / 新增...」
+      const btnText = type === 'unit' ? '⚙️ 管理' : `⚙️ 管理 / 新增${typeLabelMap[type]}`;
+
       const manageBtnHtml = `
         <div onclick="openOptionManageModal('${type}')" 
              class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-2.5 text-center text-xs font-black text-sky-600 border-t border-slate-200 cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap">
-          ⚙️ 管理
+          ${btnText}
         </div>
       `;
 
