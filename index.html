@@ -221,6 +221,16 @@
     </section>
   </main>
 
+  <!-- 照片放大彈出燈箱 Modal -->
+  <div id="imageLightboxModal" onclick="closeImageLightbox()" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-opacity duration-200">
+    <div class="relative max-w-md w-full flex flex-col items-center">
+      <button onclick="closeImageLightbox()" class="absolute -top-12 right-0 text-white bg-slate-800/80 hover:bg-slate-800 p-2 rounded-full transition">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <img id="lightboxImg" class="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/20">
+    </div>
+  </div>
+
   <!-- 通路管理 Modal -->
   <div id="storeManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
@@ -507,6 +517,20 @@
       return `${year}年${month}月${day}日`;
     }
 
+    function openImageLightbox(url) {
+      const modal = document.getElementById('imageLightboxModal');
+      const img = document.getElementById('lightboxImg');
+      if (modal && img) {
+        img.src = url;
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeImageLightbox() {
+      const modal = document.getElementById('imageLightboxModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     window.onload = function() {
       lucide.createIcons();
       updateGroupUI();
@@ -589,18 +613,14 @@
       const compressedBlob = await compressImageFile(file);
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
 
-      if (!db) {
-        alert("資料庫未連線");
-        return null;
-      }
+      if (!db) return null;
 
       try {
         const { data, error } = await db.storage.from('product-photos').upload(fileName, compressedBlob, {
           contentType: 'image/jpeg'
         });
         if (error) {
-          console.error("圖片上傳失敗詳細:", error);
-          alert("圖片上傳失敗：" + error.message);
+          console.error("圖片上傳失敗:", error.message);
           return null;
         }
 
@@ -608,7 +628,6 @@
         return publicUrlData.publicUrl;
       } catch (err) {
         console.error("圖片上傳例外:", err);
-        alert("圖片上傳發生例外錯誤：" + err.message);
         return null;
       }
     }
@@ -1006,6 +1025,11 @@
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-2.5 relative overflow-hidden">
             <div class="flex justify-between items-start gap-3">
               <div class="flex items-center space-x-2 flex-wrap min-w-0 pr-2">
+                ${r.photo_url ? `
+                  <button onclick="openImageLightbox('${r.photo_url}')" class="shrink-0 relative group">
+                    <img src="${r.photo_url}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-xs hover:opacity-90 active:scale-95 transition">
+                  </button>
+                ` : ''}
                 <span class="font-bold text-slate-800 text-base break-words">${r.name}</span>
                 <span class="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md font-medium shrink-0">${r.category || '生活用品'}</span>
               </div>
@@ -1014,12 +1038,6 @@
                 <button onclick="deleteRecord(${r.id})" title="刪除紀錄" class="hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
               </div>
             </div>
-
-            ${r.photo_url ? `
-              <div class="w-full h-36 rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
-                <img src="${r.photo_url}" class="w-full h-full object-cover">
-              </div>
-            ` : ''}
 
             <div class="flex items-center justify-between text-xs font-bold text-slate-500 overflow-hidden">
               <div class="flex items-center space-x-1.5 truncate">
