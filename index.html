@@ -89,7 +89,7 @@
                 </span>
                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
               </button>
-              <div id="addStoreDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+              <div id="addStoreDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[999] max-h-60 overflow-y-auto hidden"></div>
             </div>
 
             <div>
@@ -113,7 +113,7 @@
                 <span id="addCategorySelectedLabel" class="truncate">生活用品</span>
                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
               </button>
-              <div id="addCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+              <div id="addCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[999] max-h-60 overflow-y-auto hidden"></div>
             </div>
           </div>
 
@@ -137,7 +137,7 @@
                 <span id="addUnitSelectedLabel" class="truncate">ml</span>
                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
               </button>
-              <div id="addUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+              <div id="addUnitDropdown" class="absolute right-0 w-44 mt-1 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[999] max-h-60 overflow-y-auto hidden"></div>
             </div>
           </div>
 
@@ -219,7 +219,7 @@
   </main>
 
   <!-- 照片放大彈出燈箱 Modal -->
-  <div id="imageLightboxModal" onclick="closeImageLightbox()" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden transition-opacity duration-200">
+  <div id="imageLightboxModal" onclick="closeImageLightbox()" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 hidden transition-opacity duration-200">
     <div class="relative max-w-md w-full flex flex-col items-center">
       <button onclick="closeImageLightbox()" class="absolute -top-12 right-0 text-white bg-slate-800/80 hover:bg-slate-800 p-2 rounded-full transition">
         <i data-lucide="x" class="w-6 h-6"></i>
@@ -229,7 +229,7 @@
   </div>
 
   <!-- 通用選項管理 Modal (適用 通路 / 類別 / 單位) -->
-  <div id="optionManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div id="optionManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
       <div class="flex justify-between items-center shrink-0">
         <h3 id="optionManageTitle" class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -258,7 +258,7 @@
   </div>
 
   <!-- 家人共用 Modal -->
-  <div id="familyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div id="familyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-6 space-y-4 shadow-xl border border-slate-100">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -296,7 +296,7 @@
   </div>
 
   <!-- 編輯比價紀錄 Modal -->
-  <div id="editModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div id="editModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -320,7 +320,7 @@
               </span>
               <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
             </button>
-            <div id="editStoreDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+            <div id="editStoreDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-[999] max-h-60 overflow-y-auto hidden"></div>
           </div>
 
           <div>
@@ -341,7 +341,7 @@
               <span id="editCategorySelectedLabel" class="truncate">生活用品</span>
               <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
             </button>
-            <div id="editCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+            <div id="editCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-[999] max-h-60 overflow-y-auto hidden"></div>
           </div>
         </div>
 
@@ -361,7 +361,7 @@
               <span id="editUnitSelectedLabel" class="truncate">ml</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
             </button>
-            <div id="editUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
+            <div id="editUnitDropdown" class="absolute right-0 w-36 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-[999] max-h-60 overflow-y-auto hidden"></div>
           </div>
         </div>
 
@@ -485,7 +485,6 @@
       if (headerLabel) headerLabel.innerText = code;
     }
 
-    // 取得各選項列表
     function getStoreOptionsList() {
       return cloudStoresList.length > 0 ? cloudStoresList.map(s => s.name) : [...defaultStores];
     }
@@ -546,7 +545,6 @@
       lucide.createIcons();
     }
 
-    // 泛型化讀取選單選項
     async function fetchCustomOptionsFromCloud(tableName, targetArrayRef, defaultArray, hasLogo) {
       const currentGroup = getCurrentGroupCode();
       if (!db) return;
@@ -709,7 +707,6 @@
     function selectCategory(cat) { activeCategory = cat; renderFilterPills(); renderRecords(); }
     function selectStore(store) { activeStore = store; renderFilterPills(); renderRecords(); }
 
-    /* 通用自訂下拉選單渲染 (支援 通路/類別/單位) */
     function buildCustomDropdown(dropdownId, hiddenInputId, labelId, selectedValue, type) {
       const dropdown = document.getElementById(dropdownId);
       if (!dropdown) return;
@@ -731,11 +728,10 @@
         `;
       }).join('');
 
-      const typeLabelMap = { store: '通路', category: '類別', unit: '單位' };
       const manageBtnHtml = `
         <div onclick="openOptionManageModal('${type}')" 
-             class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-2.5 text-center text-xs font-black text-sky-600 border-t border-slate-100 cursor-pointer flex items-center justify-center gap-1">
-          <i data-lucide="settings" class="w-3.5 h-3.5"></i> 管理 / 新增${typeLabelMap[type]}
+             class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-2.5 text-center text-xs font-black text-sky-600 border-t border-slate-200 cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap">
+          ⚙️ 管理
         </div>
       `;
 
@@ -778,8 +774,7 @@
       }
     }
 
-    /* 統一管理選單與 Modal 邏輯 (通路 / 類別 / 單位) */
-    let currentManagingType = 'store'; // 'store' | 'category' | 'unit'
+    let currentManagingType = 'store'; 
     let editingOptionTargetId = null;
 
     function openOptionManageModal(type) {
@@ -965,12 +960,10 @@
     }
 
     function refreshAllDropdowns() {
-      // 重新建立新增表單下拉選單
       buildCustomDropdown('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', document.getElementById('inputStore').value, 'store');
       buildCustomDropdown('addCategoryDropdown', 'inputCategory', 'addCategorySelectedLabel', document.getElementById('inputCategory').value, 'category');
       buildCustomDropdown('addUnitDropdown', 'inputUnit', 'addUnitSelectedLabel', document.getElementById('inputUnit').value, 'unit');
 
-      // 重新建立編輯表單下拉選單
       buildCustomDropdown('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', document.getElementById('editStore').value, 'store');
       buildCustomDropdown('editCategoryDropdown', 'editCategory', 'editCategorySelectedLabel', document.getElementById('editCategory').value, 'category');
       buildCustomDropdown('editUnitDropdown', 'editUnit', 'editUnitSelectedLabel', document.getElementById('editUnit').value, 'unit');
