@@ -625,6 +625,20 @@
       }
     }
 
+    // 輔助函式：從完整 Public URL 抓出檔名以供 Supabase Storage 刪除
+    async function deletePhotoFromStorage(photoUrl) {
+      if (!db || !photoUrl) return;
+      try {
+        const parts = photoUrl.split('/');
+        const fileName = parts[parts.length - 1];
+        if (fileName) {
+          await db.storage.from('product-photos').remove([fileName]);
+        }
+      } catch (err) {
+        console.log("刪除雲端照片失敗", err);
+      }
+    }
+
     function previewSelectedPhoto(input, previewImgId, labelId) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -729,8 +743,6 @@
       }).join('');
 
       const typeLabelMap = { store: '通路', category: '類別', unit: '單位' };
-      
-      // 根據類別區分：單位用簡短的「⚙️ 管理」，通路與類別維持原本完整的「⚙️ 管理 / 新增...」
       const btnText = type === 'unit' ? '⚙️ 管理' : `⚙️ 管理 / 新增${typeLabelMap[type]}`;
 
       const manageBtnHtml = `
@@ -1148,11 +1160,19 @@
       const unitNum = price / qty;
       const unitStr = `$${unitNum.toFixed(2)} / ${unit}`;
 
-      let photoUrl = records.find(r => r.id === id)?.photo_url || null;
+      const oldRecord = records.find(r => r.id === id);
+      let photoUrl = oldRecord?.photo_url || null;
+
       const newPhotoFile = document.getElementById('editPhotoFile').files[0];
       if (newPhotoFile) {
         const uploaded = await uploadPhotoToSupabase('editPhotoFile');
-        if (uploaded) photoUrl = uploaded;
+        if (uploaded) {
+          // 如果原本有舊照片，上傳成功後順便把舊照片從 Storage 刪掉
+          if (oldRecord?.photo_url) {
+            await deletePhotoFromStorage(oldRecord.photo_url);
+          }
+          photoUrl = uploaded;
+        }
       }
 
       const updatedData = {
@@ -1190,6 +1210,8 @@
     async function deleteRecord(id) {
       if (!confirm("確定要刪除這筆紀錄嗎？")) return;
 
+      const recordToDelete = records.find(r => r.id === id);
+
       if (db) {
         try {
           const { error } = await db.from('price_records').delete().eq('id', id);
@@ -1198,6 +1220,11 @@
           alert("雲端刪除失敗：" + err.message);
           return;
         }
+      }
+
+      // 如果這筆紀錄有帶照片，順便從雲端 Storage 空間中刪除該圖片檔案
+      if (recordToDelete && recordToDelete.photo_url) {
+        await deletePhotoFromStorage(recordToDelete.photo_url);
       }
 
       records = records.filter(r => r.id !== id);
