@@ -37,7 +37,7 @@
         <button onclick="toggleFamilyModal(true)" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] sm:text-[11px] px-2 py-1 rounded-xl font-bold flex items-center gap-1 border border-amber-200 transition">
           <i data-lucide="users" class="w-3.5 h-3.5"></i> <span id="headerGroupLabel">共用中</span>
         </button>
-        <button onclick="fetchStoresAndRecords()" class="bg-sky-50 text-sky-600 hover:bg-sky-100 text-[10px] sm:text-[11px] p-1.5 rounded-xl font-bold border border-sky-200 transition">
+        <button onclick="fetchAllData()" class="bg-sky-50 text-sky-600 hover:bg-sky-100 text-[10px] sm:text-[11px] p-1.5 rounded-xl font-bold border border-sky-200 transition">
           <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -79,6 +79,7 @@
         <form id="priceForm" onsubmit="saveRecord(event)" class="space-y-4">
           
           <div class="grid grid-cols-2 gap-3">
+            <!-- 通路自訂下拉選單 -->
             <div class="relative">
               <label class="block text-sm font-black text-slate-600 mb-1.5">通路</label>
               <input type="hidden" id="inputStore" value="全聯">
@@ -103,21 +104,16 @@
               <input type="text" id="inputName" required placeholder="例：林鳳營鮮乳" oninput="calculateUnitPrice(); checkDealAlert();"
                      class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 focus:ring-2 focus:ring-sky-500 text-base font-black text-slate-800 placeholder-slate-400">
             </div>
-            <div class="col-span-5">
+            
+            <!-- 類別自訂下拉選單 -->
+            <div class="col-span-5 relative">
               <label class="block text-sm font-black text-slate-600 mb-1.5">類別</label>
-              <select id="inputCategory" class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 focus:ring-2 focus:ring-sky-500 text-base font-black text-slate-800">
-                <option value="肉品">肉品</option>
-                <option value="蔬菜">蔬菜</option>
-                <option value="餅乾">餅乾</option>
-                <option value="飲料/沖泡粉">飲料/沖泡粉</option>
-                <option value="乾糧/罐頭">乾糧/罐頭</option>
-                <option value="冷藏/冷凍">冷藏/冷凍</option>
-                <option value="清潔用品">清潔用品</option>
-                <option value="保養/美妝">保養/美妝</option>
-                <option value="生活用品" selected>生活用品</option>
-                <option value="藥品/保健品">藥品/保健品</option>
-                <option value="其他">其他</option>
-              </select>
+              <input type="hidden" id="inputCategory" value="生活用品">
+              <button type="button" onclick="toggleCustomDropdown('addCategoryDropdown', event)" class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 flex items-center justify-between text-base font-black text-slate-800">
+                <span id="addCategorySelectedLabel" class="truncate">生活用品</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              </button>
+              <div id="addCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
             </div>
           </div>
 
@@ -132,15 +128,16 @@
               <input type="number" step="0.01" id="inputQty" required placeholder="0" oninput="calculateUnitPrice(); checkDealAlert();"
                      class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 focus:ring-2 focus:ring-sky-500 text-base font-black text-slate-800 placeholder-slate-400">
             </div>
-            <div class="col-span-3">
+
+            <!-- 單位自訂下拉選單 -->
+            <div class="col-span-3 relative">
               <label class="block text-sm font-black text-slate-600 mb-1.5">單位</label>
-              <select id="inputUnit" onchange="calculateUnitPrice(); checkDealAlert();" class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 focus:ring-2 focus:ring-sky-500 text-base font-black text-slate-800">
-                <option value="ml" selected>ml</option>
-                <option value="g">g</option>
-                <option value="罐">罐</option>
-                <option value="包">包</option>
-                <option value="個">個</option>
-              </select>
+              <input type="hidden" id="inputUnit" value="ml">
+              <button type="button" onclick="toggleCustomDropdown('addUnitDropdown', event)" class="w-full p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 border-0 flex items-center justify-between text-base font-black text-slate-800 px-2">
+                <span id="addUnitSelectedLabel" class="truncate">ml</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+              </button>
+              <div id="addUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
             </div>
           </div>
 
@@ -231,32 +228,32 @@
     </div>
   </div>
 
-  <!-- 通路管理 Modal -->
-  <div id="storeManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <!-- 通用選項管理 Modal (適用 通路 / 類別 / 單位) -->
+  <div id="optionManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
       <div class="flex justify-between items-center shrink-0">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i data-lucide="settings" class="w-5 h-5 text-sky-600"></i> 管理自訂通路
+        <h3 id="optionManageTitle" class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-sky-600"></i> 管理選項
         </h3>
-        <button onclick="toggleStoreManageModal(false)" class="text-slate-400 hover:text-slate-600">
+        <button onclick="toggleOptionManageModal(false)" class="text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-6 h-6"></i>
         </button>
       </div>
 
       <div class="space-y-2 shrink-0 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-        <input type="text" id="newStoreNameInput" placeholder="通路名稱 (例: 美廉社)" class="w-full p-2.5 bg-white rounded-xl text-sm font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
-        <input type="url" id="newStoreLogoInput" placeholder="Logo 圖片網址 (選填，可之後再補)" class="w-full p-2.5 bg-white rounded-xl text-xs font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
+        <input type="text" id="newOptionNameInput" placeholder="名稱" class="w-full p-2.5 bg-white rounded-xl text-sm font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
+        <input type="url" id="newOptionLogoInput" placeholder="Logo 圖片網址 (選填)" class="w-full p-2.5 bg-white rounded-xl text-xs font-bold text-slate-700 border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500">
         <div class="flex gap-2 pt-1">
-          <button id="addStoreSubmitBtn" onclick="addCustomStore()" class="w-full bg-sky-600 text-white text-xs py-2.5 rounded-xl font-bold hover:bg-sky-700 transition">
-            新增通路
+          <button id="addOptionSubmitBtn" onclick="addCustomOption()" class="w-full bg-sky-600 text-white text-xs py-2.5 rounded-xl font-bold hover:bg-sky-700 transition">
+            新增選項
           </button>
-          <button id="cancelEditStoreBtn" onclick="resetStoreInputForm()" class="hidden w-1/3 bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-bold hover:bg-slate-300 transition">
+          <button id="cancelEditOptionBtn" onclick="resetOptionInputForm()" class="hidden w-1/3 bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-bold hover:bg-slate-300 transition">
             取消
           </button>
         </div>
       </div>
 
-      <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="storeManageList"></div>
+      <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="optionManageList"></div>
     </div>
   </div>
 
@@ -337,21 +334,14 @@
             <label class="block text-xs font-black text-slate-600 mb-1">商品名稱</label>
             <input type="text" id="editName" required class="w-full p-3 rounded-xl bg-slate-100 border-0 text-sm font-black text-slate-800">
           </div>
-          <div class="col-span-5">
+          <div class="col-span-5 relative">
             <label class="block text-xs font-black text-slate-600 mb-1">類別</label>
-            <select id="editCategory" class="w-full p-3 rounded-xl bg-slate-100 border-0 text-sm font-black text-slate-800">
-              <option value="肉品">肉品</option>
-              <option value="蔬菜">蔬菜</option>
-              <option value="餅乾">餅乾</option>
-              <option value="飲料/沖泡粉">飲料/沖泡粉</option>
-              <option value="乾糧/罐頭">乾糧/罐頭</option>
-              <option value="冷藏/冷凍">冷藏/冷凍</option>
-              <option value="清潔用品">清潔用品</option>
-              <option value="保養/美妝">保養/美妝</option>
-              <option value="生活用品" selected>生活用品</option>
-              <option value="藥品/保健品">藥品/保健品</option>
-              <option value="其他">其他</option>
-            </select>
+            <input type="hidden" id="editCategory" value="生活用品">
+            <button type="button" onclick="toggleCustomDropdown('editCategoryDropdown', event)" class="w-full p-3 rounded-xl bg-slate-100 border-0 flex items-center justify-between text-sm font-black text-slate-800">
+              <span id="editCategorySelectedLabel" class="truncate">生活用品</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            </button>
+            <div id="editCategoryDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
           </div>
         </div>
 
@@ -364,15 +354,14 @@
             <label class="block text-xs font-black text-slate-600 mb-1">數量</label>
             <input type="number" step="0.01" id="editQty" required class="w-full p-3 rounded-xl bg-slate-100 border-0 text-sm font-black text-slate-800">
           </div>
-          <div class="col-span-3">
+          <div class="col-span-3 relative">
             <label class="block text-xs font-black text-slate-600 mb-1">單位</label>
-            <select id="editUnit" class="w-full p-3 rounded-xl bg-slate-100 border-0 text-sm font-black text-slate-800">
-              <option value="ml">ml</option>
-              <option value="g">g</option>
-              <option value="罐">罐</option>
-              <option value="包">包</option>
-              <option value="個">個</option>
-            </select>
+            <input type="hidden" id="editUnit" value="ml">
+            <button type="button" onclick="toggleCustomDropdown('editUnitDropdown', event)" class="w-full p-3 rounded-xl bg-slate-100 border-0 flex items-center justify-between text-sm font-black text-slate-800 px-2">
+              <span id="editUnitSelectedLabel" class="truncate">ml</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+            </button>
+            <div id="editUnitDropdown" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 max-h-60 overflow-y-auto hidden"></div>
           </div>
         </div>
 
@@ -449,11 +438,15 @@
 
     let records = [];
     let cloudStoresList = []; 
+    let cloudCategoriesList = [];
+    let cloudUnitsList = [];
+
     let currentDimension = "category"; 
     let activeCategory = "全部";
     let activeStore = "全部";
 
-    const categories = ["全部", "肉品", "蔬菜", "餅乾", "飲料/沖泡粉", "乾糧/罐頭", "冷藏/冷凍", "清潔用品", "保養/美妝", "生活用品", "藥品/保健品", "其他"];
+    const defaultCategories = ["肉品", "蔬菜", "餅乾", "飲料/沖泡粉", "乾糧/罐頭", "冷藏/冷凍", "清潔用品", "保養/美妝", "生活用品", "藥品/保健品", "其他"];
+    const defaultUnits = ["ml", "g", "罐", "包", "個"];
 
     const defaultStores = [
       "全聯", "萬家福", "愛買", "百興隆", "蝦皮", "北海道", "開南食品", "大發", "Costco", "7-ELEVEN", "全家", "傳統市場", "其他"
@@ -492,11 +485,15 @@
       if (headerLabel) headerLabel.innerText = code;
     }
 
+    // 取得各選項列表
     function getStoreOptionsList() {
-      if (cloudStoresList.length > 0) {
-        return cloudStoresList.map(s => s.name);
-      }
-      return [...defaultStores];
+      return cloudStoresList.length > 0 ? cloudStoresList.map(s => s.name) : [...defaultStores];
+    }
+    function getCategoryOptionsList() {
+      return cloudCategoriesList.length > 0 ? cloudCategoriesList.map(c => c.name) : [...defaultCategories];
+    }
+    function getUnitOptionsList() {
+      return cloudUnitsList.length > 0 ? cloudUnitsList.map(u => u.name) : [...defaultUnits];
     }
 
     function getStoreLogoUrl(storeName) {
@@ -511,10 +508,7 @@
       if (!dateStr) return '';
       const parts = dateStr.split('-');
       if (parts.length < 3) return dateStr;
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10);
-      const day = parseInt(parts[2], 10);
-      return `${year}年${month}月${day}日`;
+      return `${parseInt(parts[0], 10)}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
     }
 
     function openImageLightbox(url) {
@@ -527,8 +521,7 @@
     }
 
     function closeImageLightbox() {
-      const modal = document.getElementById('imageLightboxModal');
-      if (modal) modal.classList.add('hidden');
+      document.getElementById('imageLightboxModal')?.classList.add('hidden');
     }
 
     window.onload = function() {
@@ -536,43 +529,53 @@
       updateGroupUI();
       
       const dateEl = document.getElementById('inputDate');
-      if (dateEl) {
-        dateEl.value = new Date().toISOString().split('T')[0];
-      }
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
 
-      fetchStoresAndRecords();
+      fetchAllData();
       registerServiceWorker();
     };
 
-    async function fetchStoresAndRecords() {
-      await fetchCustomStoresFromCloud();
+    async function fetchAllData() {
+      await fetchCustomOptionsFromCloud('store_options', cloudStoresList, defaultStores, true);
+      await fetchCustomOptionsFromCloud('category_options', cloudCategoriesList, defaultCategories, false);
+      await fetchCustomOptionsFromCloud('unit_options', cloudUnitsList, defaultUnits, false);
+      
       await fetchRecords();
+      refreshAllDropdowns();
+      renderFilterPills();
       lucide.createIcons();
     }
 
-    async function fetchCustomStoresFromCloud() {
+    // 泛型化讀取選單選項
+    async function fetchCustomOptionsFromCloud(tableName, targetArrayRef, defaultArray, hasLogo) {
       const currentGroup = getCurrentGroupCode();
       if (!db) return;
 
       try {
-        const { data, error } = await db.from('store_options').select('*').eq('group_code', currentGroup).order('id', { ascending: true });
+        const { data, error } = await db.from(tableName).select('*').eq('group_code', currentGroup).order('id', { ascending: true });
         if (error) return;
 
+        let result = [];
         if (data && data.length > 0) {
-          cloudStoresList = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
+          result = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
         } else {
-          const initBatch = defaultStores.map(s => ({ group_code: currentGroup, name: s, logo_url: defaultStoreIcons[s] || '' }));
-          const { data: insertedData } = await db.from('store_options').insert(initBatch).select();
+          const initBatch = defaultArray.map(name => ({
+            group_code: currentGroup,
+            name: name,
+            ...(hasLogo ? { logo_url: defaultStoreIcons[name] || '' } : {})
+          }));
+          const { data: insertedData } = await db.from(tableName).insert(initBatch).select();
           if (insertedData) {
-            cloudStoresList = insertedData.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
+            result = insertedData.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
           }
         }
-      } catch (err) {
-        console.log("讀取雲端通路例外:", err);
-      }
 
-      refreshDropdownsAfterManage();
-      renderFilterPills();
+        if (tableName === 'store_options') cloudStoresList = result;
+        if (tableName === 'category_options') cloudCategoriesList = result;
+        if (tableName === 'unit_options') cloudUnitsList = result;
+      } catch (err) {
+        console.log(`讀取 ${tableName} 例外:`, err);
+      }
     }
 
     function compressImageFile(file, maxWidth = 800, quality = 0.7) {
@@ -597,9 +600,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            canvas.toBlob((blob) => {
-              resolve(blob);
-            }, 'image/jpeg', quality);
+            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
           };
         };
       });
@@ -616,18 +617,12 @@
       if (!db) return null;
 
       try {
-        const { data, error } = await db.storage.from('product-photos').upload(fileName, compressedBlob, {
-          contentType: 'image/jpeg'
-        });
-        if (error) {
-          console.error("圖片上傳失敗:", error.message);
-          return null;
-        }
+        const { error } = await db.storage.from('product-photos').upload(fileName, compressedBlob, { contentType: 'image/jpeg' });
+        if (error) return null;
 
         const { data: publicUrlData } = db.storage.from('product-photos').getPublicUrl(fileName);
         return publicUrlData.publicUrl;
       } catch (err) {
-        console.error("圖片上傳例外:", err);
         return null;
       }
     }
@@ -673,12 +668,11 @@
       if (!container) return;
 
       if (currentDimension === 'category') {
-        container.innerHTML = categories.map(cat => `
+        const cats = ["全部", ...getCategoryOptionsList()];
+        container.innerHTML = cats.map(cat => `
           <button onclick="selectCategory('${cat}')"
                   class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm ${
-                    activeCategory === cat 
-                      ? 'bg-emerald-600 text-white shadow-md' 
-                      : 'bg-white text-slate-600 border border-slate-200'
+                    activeCategory === cat ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'
                   }">
             ${cat}
           </button>
@@ -691,9 +685,7 @@
             return `
               <button onclick="selectStore('全部')"
                       class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm ${
-                        isSelected 
-                          ? 'bg-sky-600 text-white shadow-md' 
-                          : 'bg-white text-slate-600 border border-slate-200'
+                        isSelected ? 'bg-sky-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'
                       }">
                 全部
               </button>
@@ -704,9 +696,7 @@
           return `
             <button onclick="selectStore('${store}')"
                     class="px-3 py-1.5 rounded-2xl text-xs font-extrabold whitespace-nowrap transition shadow-sm flex items-center gap-1.5 shrink-0 ${
-                      isSelected 
-                        ? 'bg-sky-600 text-white shadow-md' 
-                        : 'bg-white text-slate-600 border border-slate-200'
+                      isSelected ? 'bg-sky-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'
                     }">
               <img src="${logoUrl}" class="w-4 h-4 rounded-full object-cover shrink-0 border border-slate-100">
               <span class="truncate max-w-[100px]">${store}</span>
@@ -716,39 +706,36 @@
       }
     }
 
-    function selectCategory(cat) {
-      activeCategory = cat;
-      renderFilterPills();
-      renderRecords();
-    }
+    function selectCategory(cat) { activeCategory = cat; renderFilterPills(); renderRecords(); }
+    function selectStore(store) { activeStore = store; renderFilterPills(); renderRecords(); }
 
-    function selectStore(store) {
-      activeStore = store;
-      renderFilterPills();
-      renderRecords();
-    }
-
-    function buildCustomDropdown(dropdownId, hiddenInputId, labelId, selectedValue) {
+    /* 通用自訂下拉選單渲染 (支援 通路/類別/單位) */
+    function buildCustomDropdown(dropdownId, hiddenInputId, labelId, selectedValue, type) {
       const dropdown = document.getElementById(dropdownId);
       if (!dropdown) return;
 
-      const currentList = getStoreOptionsList();
-      const listHtml = currentList.map(store => {
-        const logo = getStoreLogoUrl(store);
-        const isSelected = (store === selectedValue);
+      let currentList = [];
+      if (type === 'store') currentList = getStoreOptionsList();
+      if (type === 'category') currentList = getCategoryOptionsList();
+      if (type === 'unit') currentList = getUnitOptionsList();
+
+      const listHtml = currentList.map(item => {
+        const logo = type === 'store' ? getStoreLogoUrl(item) : '';
+        const isSelected = (item === selectedValue);
         return `
-          <div onclick="selectCustomOption('${dropdownId}', '${hiddenInputId}', '${labelId}', '${store}')"
-               class="flex items-center gap-3 px-4 py-3 hover:bg-sky-50 cursor-pointer font-bold text-slate-700 transition ${isSelected ? 'bg-sky-50/80 text-sky-700' : ''}">
-            <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0 shadow-xs border border-slate-200">
-            <span>${store}</span>
+          <div onclick="selectCustomOption('${dropdownId}', '${hiddenInputId}', '${labelId}', '${item}', '${type}')"
+               class="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-sky-50 cursor-pointer font-bold text-slate-700 transition ${isSelected ? 'bg-sky-50/80 text-sky-700' : ''}">
+            ${type === 'store' ? `<img src="${logo}" class="w-4 h-4 rounded-full object-cover shrink-0 shadow-xs border border-slate-200">` : ''}
+            <span class="text-sm truncate">${item}</span>
           </div>
         `;
       }).join('');
 
+      const typeLabelMap = { store: '通路', category: '類別', unit: '單位' };
       const manageBtnHtml = `
-        <div onclick="openStoreManageModal('${dropdownId}', '${hiddenInputId}', '${labelId}')" 
-             class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-3 text-center text-xs font-black text-sky-600 border-t border-slate-100 cursor-pointer flex items-center justify-center gap-1.5">
-          <i data-lucide="settings" class="w-3.5 h-3.5"></i> 管理 / 新增通路
+        <div onclick="openOptionManageModal('${type}')" 
+             class="sticky bottom-0 bg-slate-50 hover:bg-slate-100 p-2.5 text-center text-xs font-black text-sky-600 border-t border-slate-100 cursor-pointer flex items-center justify-center gap-1">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i> 管理 / 新增${typeLabelMap[type]}
         </div>
       `;
 
@@ -758,68 +745,98 @@
 
     function toggleCustomDropdown(dropdownId, event) {
       if (event) event.stopPropagation();
-      ['addStoreDropdown', 'editStoreDropdown'].forEach(id => {
+      const allDropdowns = ['addStoreDropdown', 'editStoreDropdown', 'addCategoryDropdown', 'editCategoryDropdown', 'addUnitDropdown', 'editUnitDropdown'];
+      allDropdowns.forEach(id => {
         if (id !== dropdownId) document.getElementById(id)?.classList.add('hidden');
       });
       const el = document.getElementById(dropdownId);
       if (el) el.classList.toggle('hidden');
     }
 
-    function selectCustomOption(dropdownId, hiddenInputId, labelId, storeName) {
-      document.getElementById(hiddenInputId).value = storeName;
-      const logo = getStoreLogoUrl(storeName);
-      document.getElementById(labelId).innerHTML = `
-        <img src="${logo}" class="w-5 h-5 rounded-full object-cover shrink-0"> ${storeName}
-      `;
+    function selectCustomOption(dropdownId, hiddenInputId, labelId, value, type) {
+      document.getElementById(hiddenInputId).value = value;
+      
+      if (type === 'store') {
+        const logo = getStoreLogoUrl(value);
+        document.getElementById(labelId).innerHTML = `<img src="${logo}" class="w-4 h-4 rounded-full object-cover shrink-0"> ${value}`;
+      } else {
+        document.getElementById(labelId).innerText = value;
+      }
+
       document.getElementById(dropdownId).classList.add('hidden');
-      if (dropdownId === 'addStoreDropdown') {
+      
+      if (dropdownId === 'addStoreDropdown' || dropdownId === 'addCategoryDropdown' || dropdownId === 'addUnitDropdown') {
+        calculateUnitPrice();
         checkDealAlert();
       }
     }
 
     function closeAllCustomDropdowns(event) {
       if (!event.target.closest('.relative')) {
-        document.getElementById('addStoreDropdown')?.classList.add('hidden');
-        document.getElementById('editStoreDropdown')?.classList.add('hidden');
+        const allDropdowns = ['addStoreDropdown', 'editStoreDropdown', 'addCategoryDropdown', 'editCategoryDropdown', 'addUnitDropdown', 'editUnitDropdown'];
+        allDropdowns.forEach(id => document.getElementById(id)?.classList.add('hidden'));
       }
     }
 
-    let editingStoreTargetId = null;
+    /* 統一管理選單與 Modal 邏輯 (通路 / 類別 / 單位) */
+    let currentManagingType = 'store'; // 'store' | 'category' | 'unit'
+    let editingOptionTargetId = null;
 
-    function openStoreManageModal(dropdownId, hiddenInputId, labelId) {
-      document.getElementById('addStoreDropdown')?.classList.add('hidden');
-      document.getElementById('editStoreDropdown')?.classList.add('hidden');
-      resetStoreInputForm();
-      renderStoreManageList();
-      toggleStoreManageModal(true);
+    function openOptionManageModal(type) {
+      currentManagingType = type;
+      const allDropdowns = ['addStoreDropdown', 'editStoreDropdown', 'addCategoryDropdown', 'editCategoryDropdown', 'addUnitDropdown', 'editUnitDropdown'];
+      allDropdowns.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+
+      const titleMap = { store: '自訂通路', category: '自訂類別', unit: '自訂單位' };
+      document.getElementById('optionManageTitle').innerHTML = `<i data-lucide="settings" class="w-5 h-5 text-sky-600"></i> 管理${titleMap[type]}`;
+
+      const logoInput = document.getElementById('newOptionLogoInput');
+      if (type === 'store') {
+        logoInput.classList.remove('hidden');
+      } else {
+        logoInput.classList.add('hidden');
+      }
+
+      resetOptionInputForm();
+      renderOptionManageList();
+      toggleOptionManageModal(true);
     }
 
-    function toggleStoreManageModal(show) {
-      document.getElementById('storeManageModal').classList.toggle('hidden', !show);
+    function toggleOptionManageModal(show) {
+      document.getElementById('optionManageModal').classList.toggle('hidden', !show);
     }
 
-    function renderStoreManageList() {
-      const container = document.getElementById('storeManageList');
+    function getTargetListForManaging() {
+      if (currentManagingType === 'store') return cloudStoresList;
+      if (currentManagingType === 'category') return cloudCategoriesList;
+      if (currentManagingType === 'unit') return cloudUnitsList;
+      return [];
+    }
+
+    function renderOptionManageList() {
+      const container = document.getElementById('optionManageList');
       if (!container) return;
 
-      container.innerHTML = cloudStoresList.map((item, index) => {
+      const list = getTargetListForManaging();
+
+      container.innerHTML = list.map((item, index) => {
         return `
           <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
             <div class="flex items-center gap-2 font-bold text-slate-700 text-sm truncate pr-1">
-              <img src="${item.logo_url || defaultStoreIcons['預設']}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">
+              ${currentManagingType === 'store' ? `<img src="${item.logo_url || defaultStoreIcons['預設']}" class="w-5 h-5 rounded-full object-cover shrink-0 border border-slate-200">` : ''}
               <span class="truncate">${item.name}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button onclick="moveStorePosition(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="上移">
+              <button onclick="moveOptionPosition(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="上移">
                 <i data-lucide="arrow-up" class="w-4 h-4"></i>
               </button>
-              <button onclick="moveStorePosition(${index}, 1)" ${index === cloudStoresList.length - 1 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="下移">
+              <button onclick="moveOptionPosition(${index}, 1)" ${index === list.length - 1 ? 'disabled class="opacity-20 p-1 text-slate-300"' : 'class="p-1 text-slate-500 hover:text-sky-600 transition"'} title="下移">
                 <i data-lucide="arrow-down" class="w-4 h-4"></i>
               </button>
-              <button onclick="startEditStore(${item.id})" class="text-slate-400 hover:text-sky-600 p-1 transition" title="編輯">
+              <button onclick="startEditOption(${item.id})" class="text-slate-400 hover:text-sky-600 p-1 transition" title="編輯">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
               </button>
-              <button onclick="removeCustomStoreById(${item.id}, '${item.name}')" class="text-slate-400 hover:text-rose-500 p-1 transition" title="刪除">
+              <button onclick="removeOptionById(${item.id}, '${item.name}')" class="text-slate-400 hover:text-rose-500 p-1 transition" title="刪除">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -829,26 +846,37 @@
       lucide.createIcons();
     }
 
-    async function moveStorePosition(index, direction) {
+    async function moveOptionPosition(index, direction) {
+      const list = getTargetListForManaging();
       const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= cloudStoresList.length) return;
+      if (targetIndex < 0 || targetIndex >= list.length) return;
 
-      const temp = cloudStoresList[index];
-      cloudStoresList[index] = cloudStoresList[targetIndex];
-      cloudStoresList[targetIndex] = temp;
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
 
-      renderStoreManageList();
-      refreshDropdownsAfterManage();
+      renderOptionManageList();
+      refreshAllDropdowns();
       renderFilterPills();
 
       const currentGroup = getCurrentGroupCode();
+      const tableNameMap = { store: 'store_options', category: 'category_options', unit: 'unit_options' };
+      const tableName = tableNameMap[currentManagingType];
+
       if (db) {
         try {
-          await db.from('store_options').delete().eq('group_code', currentGroup);
-          const newBatch = cloudStoresList.map(s => ({ group_code: currentGroup, name: s.name, logo_url: s.logo_url }));
-          const { data } = await db.from('store_options').insert(newBatch).select();
+          await db.from(tableName).delete().eq('group_code', currentGroup);
+          const newBatch = list.map(s => ({
+            group_code: currentGroup,
+            name: s.name,
+            ...(currentManagingType === 'store' ? { logo_url: s.logo_url } : {})
+          }));
+          const { data } = await db.from(tableName).insert(newBatch).select();
           if (data) {
-            cloudStoresList = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
+            const mapped = data.map(d => ({ id: d.id, name: d.name, logo_url: d.logo_url || '' }));
+            if (currentManagingType === 'store') cloudStoresList = mapped;
+            if (currentManagingType === 'category') cloudCategoriesList = mapped;
+            if (currentManagingType === 'unit') cloudUnitsList = mapped;
           }
         } catch(e) {
           console.error("更新雲端排序失敗", e);
@@ -856,86 +884,96 @@
       }
     }
 
-    function startEditStore(id) {
-      const item = cloudStoresList.find(s => s.id === id);
+    function startEditOption(id) {
+      const list = getTargetListForManaging();
+      const item = list.find(s => s.id === id);
       if (!item) return;
 
-      editingStoreTargetId = id;
-      document.getElementById('newStoreNameInput').value = item.name;
-      document.getElementById('newStoreLogoInput').value = item.logo_url;
+      editingOptionTargetId = id;
+      document.getElementById('newOptionNameInput').value = item.name;
+      if (currentManagingType === 'store') {
+        document.getElementById('newOptionLogoInput').value = item.logo_url || '';
+      }
 
-      document.getElementById('addStoreSubmitBtn').innerText = '儲存修改';
-      document.getElementById('cancelEditStoreBtn').classList.remove('hidden');
+      document.getElementById('addOptionSubmitBtn').innerText = '儲存修改';
+      document.getElementById('cancelEditOptionBtn').classList.remove('hidden');
     }
 
-    function resetStoreInputForm() {
-      editingStoreTargetId = null;
-      document.getElementById('newStoreNameInput').value = '';
-      document.getElementById('newStoreLogoInput').value = '';
-      document.getElementById('addStoreSubmitBtn').innerText = '新增通路';
-      document.getElementById('cancelEditStoreBtn').classList.add('hidden');
+    function resetOptionInputForm() {
+      editingOptionTargetId = null;
+      document.getElementById('newOptionNameInput').value = '';
+      document.getElementById('newOptionLogoInput').value = '';
+      document.getElementById('addOptionSubmitBtn').innerText = '新增選項';
+      document.getElementById('cancelEditOptionBtn').classList.add('hidden');
     }
 
-    async function addCustomStore() {
-      const nameInput = document.getElementById('newStoreNameInput');
-      const logoInput = document.getElementById('newStoreLogoInput');
+    async function addCustomOption() {
+      const nameInput = document.getElementById('newOptionNameInput');
+      const logoInput = document.getElementById('newOptionLogoInput');
 
       const newName = nameInput.value.trim();
       const newLogo = logoInput.value.trim();
       const currentGroup = getCurrentGroupCode();
 
       if (!newName) {
-        alert('請輸入通路名稱！');
+        alert('請輸入名稱！');
         return;
       }
 
-      if (editingStoreTargetId) {
+      const tableNameMap = { store: 'store_options', category: 'category_options', unit: 'unit_options' };
+      const tableName = tableNameMap[currentManagingType];
+
+      const payload = { group_code: currentGroup, name: newName };
+      if (currentManagingType === 'store') payload.logo_url = newLogo;
+
+      if (editingOptionTargetId) {
         if (db) {
           try {
-            const { error } = await db.from('store_options').update({ name: newName, logo_url: newLogo }).eq('id', editingStoreTargetId);
+            const { error } = await db.from(tableName).update(payload).eq('id', editingOptionTargetId);
             if (error) alert("雲端更新失敗：" + error.message);
           } catch(e) { console.error(e); }
         }
       } else {
         if (db) {
           try {
-            const { error } = await db.from('store_options').insert([{ group_code: currentGroup, name: newName, logo_url: newLogo }]);
+            const { error } = await db.from(tableName).insert([payload]);
             if (error) alert("雲端新增失敗：" + error.message);
           } catch(e) { console.error(e); }
         }
       }
 
-      await fetchCustomStoresFromCloud();
-      resetStoreInputForm();
-      renderStoreManageList();
+      await fetchAllData();
+      resetOptionInputForm();
+      renderOptionManageList();
     }
 
-    async function removeCustomStoreById(id, storeName) {
-      if (!confirm(`確定要移除「${storeName}」嗎？`)) return;
+    async function removeOptionById(id, optionName) {
+      if (!confirm(`確定要移除「${optionName}」嗎？`)) return;
+
+      const tableNameMap = { store: 'store_options', category: 'category_options', unit: 'unit_options' };
+      const tableName = tableNameMap[currentManagingType];
 
       if (db) {
         try {
-          const { error } = await db.from('store_options').delete().eq('id', id);
+          const { error } = await db.from(tableName).delete().eq('id', id);
           if (error) alert("雲端刪除失敗：" + error.message);
         } catch(e) { console.error(e); }
       }
 
-      await fetchCustomStoresFromCloud();
-      renderStoreManageList();
+      await fetchAllData();
+      renderOptionManageList();
     }
 
-    function refreshDropdownsAfterManage() {
-      const list = getStoreOptionsList();
-      const currentAddStore = document.getElementById('inputStore').value;
-      const currentEditStore = document.getElementById('editStore').value;
+    function refreshAllDropdowns() {
+      // 重新建立新增表單下拉選單
+      buildCustomDropdown('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', document.getElementById('inputStore').value, 'store');
+      buildCustomDropdown('addCategoryDropdown', 'inputCategory', 'addCategorySelectedLabel', document.getElementById('inputCategory').value, 'category');
+      buildCustomDropdown('addUnitDropdown', 'inputUnit', 'addUnitSelectedLabel', document.getElementById('inputUnit').value, 'unit');
 
-      const safeAddStore = list.includes(currentAddStore) ? currentAddStore : (list[0] || '全聯');
-      selectCustomOption('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', safeAddStore);
-      buildCustomDropdown('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', safeAddStore);
-
-      const safeEditStore = list.includes(currentEditStore) ? currentEditStore : (list[0] || '全聯');
-      selectCustomOption('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', safeEditStore);
-      buildCustomDropdown('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', safeEditStore);
+      // 重新建立編輯表單下拉選單
+      buildCustomDropdown('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', document.getElementById('editStore').value, 'store');
+      buildCustomDropdown('editCategoryDropdown', 'editCategory', 'editCategorySelectedLabel', document.getElementById('editCategory').value, 'category');
+      buildCustomDropdown('editUnitDropdown', 'editUnit', 'editUnitSelectedLabel', document.getElementById('editUnit').value, 'unit');
     }
 
     async function fetchRecords() {
@@ -944,7 +982,6 @@
 
       if (!db) {
         if (statusEl) statusEl.innerHTML = `<i data-lucide="cloud" class="w-3 h-3"></i> 同步 (${currentGroup})`;
-        lucide.createIcons();
         renderRecords();
         updateDashboardData();
         return;
@@ -972,12 +1009,7 @@
         const key = r.name.trim();
         const numPrice = r.unit_price_num || (r.price / r.qty);
         if (!minMap[key] || numPrice < minMap[key].val) {
-          minMap[key] = {
-            val: numPrice,
-            store: r.store,
-            unit: r.unit,
-            str: r.unit_price_str
-          };
+          minMap[key] = { val: numPrice, store: r.store, unit: r.unit, str: r.unit_price_str };
         }
       });
       return minMap;
@@ -1076,21 +1108,19 @@
       if (!record) return;
 
       const storeVal = record.store || '全聯';
+      const categoryVal = record.category || '生活用品';
+      const unitVal = record.unit || 'ml';
+
       document.getElementById('editId').value = record.id;
-      document.getElementById('editStore').value = storeVal;
       
-      const logo = getStoreLogoUrl(storeVal);
-      document.getElementById('editStoreSelectedLabel').innerHTML = `
-        <img src="${logo}" class="w-4 h-4 rounded-full object-cover shrink-0"> ${storeVal}
-      `;
-      buildCustomDropdown('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', storeVal);
+      selectCustomOption('editStoreDropdown', 'editStore', 'editStoreSelectedLabel', storeVal, 'store');
+      selectCustomOption('editCategoryDropdown', 'editCategory', 'editCategorySelectedLabel', categoryVal, 'category');
+      selectCustomOption('editUnitDropdown', 'editUnit', 'editUnitSelectedLabel', unitVal, 'unit');
 
       document.getElementById('editDate').value = record.date || new Date().toISOString().split('T')[0];
       document.getElementById('editName').value = record.name || '';
-      document.getElementById('editCategory').value = record.category || '生活用品';
       document.getElementById('editPrice').value = record.price || 0;
       document.getElementById('editQty').value = record.qty || 1;
-      document.getElementById('editUnit').value = record.unit || 'ml';
       document.getElementById('editNote').value = record.note || '';
 
       document.getElementById('editPhotoFile').value = "";
@@ -1146,16 +1176,13 @@
           const { error } = await db.from('price_records').update(updatedData).eq('id', id);
           if (error) throw error;
         } catch(err) {
-          console.error("雲端更新失敗", err);
           alert("雲端更新失敗：" + err.message);
           return;
         }
       }
 
       const index = records.findIndex(r => r.id === id);
-      if (index !== -1) {
-        records[index] = { ...records[index], ...updatedData };
-      }
+      if (index !== -1) records[index] = { ...records[index], ...updatedData };
 
       toggleEditModal(false);
       renderRecords();
@@ -1170,7 +1197,6 @@
           const { error } = await db.from('price_records').delete().eq('id', id);
           if (error) throw error;
         } catch(err) {
-          console.error("雲端刪除失敗", err);
           alert("雲端刪除失敗：" + err.message);
           return;
         }
@@ -1188,8 +1214,7 @@
       const preview = document.getElementById('unitPricePreview');
 
       if (price > 0 && qty > 0) {
-        const uPrice = (price / qty).toFixed(2);
-        preview.innerText = `$${uPrice} / ${unit}`;
+        preview.innerText = `$${(price / qty).toFixed(2)} / ${unit}`;
       } else {
         preview.innerText = `$0.00 / ${unit}`;
       }
@@ -1241,7 +1266,7 @@
     async function saveRecord(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('saveRecordBtn');
-      submitBtn.innerText = "上傳照片並儲存中...";
+      submitBtn.innerText = "儲存中...";
       submitBtn.disabled = true;
 
       const price = parseFloat(document.getElementById('inputPrice').value) || 0;
@@ -1277,13 +1302,9 @@
         try {
           const { data, error } = await db.from('price_records').insert([newRecord]).select();
           if (error) throw error;
-          if (data && data.length > 0) {
-            records.unshift(data[0]);
-          } else {
-            records.unshift({ ...newRecord, id: Date.now() });
-          }
+          if (data && data.length > 0) records.unshift(data[0]);
+          else records.unshift({ ...newRecord, id: Date.now() });
         } catch(err) {
-          console.error("雲端儲存失敗", err);
           alert("雲端儲存失敗！錯誤： " + err.message);
           submitBtn.innerText = "儲存記錄至雲端";
           submitBtn.disabled = false;
@@ -1298,11 +1319,6 @@
       
       const dateEl = document.getElementById('inputDate');
       if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
-      
-      const defaultStore = getStoreOptionsList()[0] || '全聯';
-      selectCustomOption('addStoreDropdown', 'inputStore', 'addStoreSelectedLabel', defaultStore);
-      document.getElementById('inputCategory').value = "生活用品";
-      document.getElementById('inputUnit').value = "ml";
 
       submitBtn.innerText = "儲存記錄至雲端";
       submitBtn.disabled = false;
@@ -1314,9 +1330,7 @@
       switchTab('search');
     }
 
-    function updateDashboardData() {
-      renderStoreCpRanking();
-    }
+    function updateDashboardData() { renderStoreCpRanking(); }
 
     function renderStoreCpRanking() {
       const container = document.getElementById('storeCpRankingList');
@@ -1363,11 +1377,7 @@
     }
 
     function exportToCSV() {
-      if (records.length === 0) {
-        alert('目前無比價紀錄可供匯出');
-        return;
-      }
-
+      if (records.length === 0) return alert('目前無比價紀錄可供匯出');
       const headers = ["日期", "商品名稱", "類別", "通路", "總價格", "數量", "單位", "換算單價", "備註", "照片連結"];
       const csvRows = [headers.join(",")];
 
@@ -1387,31 +1397,22 @@
         csvRows.push(row.join(","));
       });
 
-      const csvString = "\uFEFF" + csvRows.join("\n");
-      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      
-      const today = new Date().toISOString().split('T')[0];
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `price_records_${today}.csv`);
+      link.setAttribute("download", `price_records_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
     function exportToJSON() {
-      if (records.length === 0) {
-        alert('目前無比價紀錄可供匯出');
-        return;
-      }
-
+      if (records.length === 0) return alert('目前無比價紀錄可供匯出');
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
-      const today = new Date().toISOString().split('T')[0];
-      
       const link = document.createElement("a");
       link.setAttribute("href", dataStr);
-      link.setAttribute("download", `price_records_backup_${today}.json`);
+      link.setAttribute("download", `price_records_backup_${new Date().toISOString().split('T')[0]}.json`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1430,43 +1431,31 @@
       dashboardNav.className = 'flex flex-col items-center gap-1 text-slate-400 hover:text-sky-600 transition';
       if (addNavText) addNavText.className = 'text-xs font-bold text-slate-400';
 
-      if (tab === 'search') {
-        searchNav.className = 'flex flex-col items-center gap-1 text-sky-600 transition';
-      } else if (tab === 'add') {
-        if (addNavText) addNavText.className = 'text-xs font-bold text-sky-600';
-      } else if (tab === 'dashboard') {
-        dashboardNav.className = 'flex flex-col items-center gap-1 text-sky-600 transition';
-        updateDashboardData();
-      }
+      if (tab === 'search') searchNav.className = 'flex flex-col items-center gap-1 text-sky-600 transition';
+      else if (tab === 'add') { if (addNavText) addNavText.className = 'text-xs font-bold text-sky-600'; }
+      else if (tab === 'dashboard') { dashboardNav.className = 'flex flex-col items-center gap-1 text-sky-600 transition'; updateDashboardData(); }
       lucide.createIcons();
     }
 
     function toggleFamilyModal(show) {
       document.getElementById('familyModal').classList.toggle('hidden', !show);
-      if (show) {
-        updateGroupUI();
-        lucide.createIcons();
-      }
+      if (show) { updateGroupUI(); lucide.createIcons(); }
     }
 
     function copyFamilyCode() {
-      const codeInput = document.getElementById('familyGroupCode');
-      navigator.clipboard.writeText(codeInput.value);
+      navigator.clipboard.writeText(document.getElementById('familyGroupCode').value);
       alert('已複製群組代碼！');
     }
 
     function joinFamilyGroup() {
       const code = document.getElementById('joinCodeInput').value.trim() || document.getElementById('familyGroupCode').value.trim();
-      if (!code) {
-        alert('請輸入有效的群組代碼');
-        return;
-      }
+      if (!code) return alert('請輸入有效的群組代碼');
       const upperCode = code.toUpperCase();
       localStorage.setItem('pwa_group_code', upperCode);
       updateGroupUI();
       alert(`已成功切換群組至 [${upperCode}]！`);
       toggleFamilyModal(false);
-      fetchStoresAndRecords();
+      fetchAllData();
     }
 
     function registerServiceWorker() {
@@ -1474,16 +1463,13 @@
         const swCode = `
           self.addEventListener('install', e => self.skipWaiting());
           self.addEventListener('activate', e => {
-            e.waitUntil(
-              caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
-            );
+            e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))));
             return self.clients.claim();
           });
           self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
         const blob = new Blob([swCode], { type: 'text/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration failed:', err));
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW failed:', err));
       }
     }
   </script>
