@@ -8,7 +8,14 @@
   <title>隨手比價 PWA</title>
   
   <!-- 跨平台全螢幕 PWA 核心設定 -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"隨手比價","short_name":"比價","start_url":".","display":"standalone","background_color":"#f2f5f8","theme_color":"#0284c7"}'>
+  <!-- 替換成外部檔案連結 -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0284c7">
+
+  <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="隨手比價">
   <meta name="theme-color" content="#0284c7">
 
   <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
