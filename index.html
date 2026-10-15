@@ -7,8 +7,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>隨手比價 PWA</title>
   
+  <!-- 跨平台全螢幕 PWA 核心設定 -->
   <link rel="manifest" href='data:application/manifest+json,{"name":"隨手比價","short_name":"比價","start_url":".","display":"standalone","background_color":"#f2f5f8","theme_color":"#0284c7"}'>
   <meta name="theme-color" content="#0284c7">
+
+  <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="隨手比價">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -625,7 +631,6 @@
       }
     }
 
-    // 輔助函式：從完整 Public URL 抓出檔名以供 Supabase Storage 刪除
     async function deletePhotoFromStorage(photoUrl) {
       if (!db || !photoUrl) return;
       try {
@@ -1167,7 +1172,6 @@
       if (newPhotoFile) {
         const uploaded = await uploadPhotoToSupabase('editPhotoFile');
         if (uploaded) {
-          // 如果原本有舊照片，上傳成功後順便把舊照片從 Storage 刪掉
           if (oldRecord?.photo_url) {
             await deletePhotoFromStorage(oldRecord.photo_url);
           }
@@ -1222,7 +1226,6 @@
         }
       }
 
-      // 如果這筆紀錄有帶照片，順便從雲端 Storage 空間中刪除該圖片檔案
       if (recordToDelete && recordToDelete.photo_url) {
         await deletePhotoFromStorage(recordToDelete.photo_url);
       }
