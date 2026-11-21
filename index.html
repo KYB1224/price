@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <link rel="icon" href="https://i.meee.com.tw/Se96Hpw.jpg" type="image/x-icon">
-  <link rel="apple-touch-icon" href="https://i.meee.com.tw/Se96Hpw.jpg">
+  <link rel="icon" href="https://i.meee.com.tw/5zGhqqH.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://i.meee.com.tw/5zGhqqH.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>隨手比價 PWA</title>
@@ -15,13 +15,13 @@
   <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="隨手比價">
+  <meta name="apple-mobile-web-app-title" content="價">
   <meta name="theme-color" content="#0284c7">
 
   <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="隨手比價">
+  <meta name="apple-mobile-web-app-title" content="價">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -36,13 +36,97 @@
       color: #1e293b !important;
       -webkit-text-fill-color: #1e293b !important;
     }
+
+    /* 全站視覺升級：清爽奶油白底、藍紫漸層與更有層次的卡片 */
+    :root { color-scheme: light; }
+    body {
+      background:
+        radial-gradient(ellipse at 8% 0%, rgba(125, 211, 252, .28), transparent 34%),
+        radial-gradient(ellipse at 96% 18%, rgba(196, 181, 253, .24), transparent 32%),
+        linear-gradient(180deg, #f7f9ff 0%, #f3f6fc 48%, #f8fafc 100%) !important;
+      background-attachment: fixed;
+    }
+    main { padding-top: 8px !important; }
+    main > header {
+      position: relative;
+      padding: 8px 12px !important;
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 19px;
+      background: linear-gradient(115deg, #ffffff 0%, #f0f7ff 56%, #f4f1ff 100%);
+      box-shadow: 0 9px 26px rgba(57, 87, 140, .09), inset 0 1px 0 #fff;
+    }
+    main > header h1 {
+      display: block;
+      width: auto; height: auto;
+      padding: 0; border-radius: 0;
+      color: #1e293b; font-size: 20px; font-weight: 900;
+      background: transparent; box-shadow: none;
+      line-height: 1.25;
+      margin-left: 8px; /* 標題與卡片左緣保留呼吸空間 */
+    }
+    #cloudStatus, main > header button { box-shadow: 0 2px 7px rgba(15,23,42,.045); }
+    section#tab-add > div, #tab-dashboard > div, #tab-search > div:not(.relative) {
+      border-radius: 25px !important;
+      box-shadow: 0 8px 24px rgba(47, 68, 112, .075) !important;
+    }
+    section#tab-add > div {
+      border: 1px solid rgba(255,255,255,.95) !important;
+      background: linear-gradient(160deg, #fff 0%, #fbfdff 100%) !important;
+    }
+    label { color: #475569 !important; letter-spacing: .01em; }
+    input:not([type="file"]), select, textarea {
+      border: 1px solid #e5eaf4 !important;
+      background-color: #f5f7fc !important;
+      border-radius: 15px !important;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      background-color: #fff !important;
+      border-color: #7dd3fc !important;
+      box-shadow: 0 0 0 3px rgba(56,189,248,.13) !important;
+      outline: none !important;
+    }
+    button { transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+    button:active { transform: scale(.975); }
+    #saveRecordBtn {
+      background: linear-gradient(115deg, #0ea5e9, #2563eb 58%, #6366f1) !important;
+      box-shadow: 0 8px 18px rgba(37,99,235,.23) !important;
+    }
+    #unitPricePreview {
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.12);
+    }
+    #tab-add .col-span-5.bg-\[\#10b981\] {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      box-shadow: 0 7px 16px rgba(16,185,129,.18);
+    }
+    nav.fixed.bottom-0 {
+      background: rgba(255,255,255,.88) !important;
+      border-top: 1px solid rgba(226,232,240,.8) !important;
+      box-shadow: 0 -8px 28px rgba(51,65,85,.08) !important;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    nav #nav-add > div {
+      background: linear-gradient(145deg, #38bdf8, #2563eb 60%, #6366f1) !important;
+      box-shadow: 0 9px 20px rgba(37,99,235,.28) !important;
+    }
+    #tab-search input#searchInput {
+      background: rgba(255,255,255,.94) !important;
+      box-shadow: 0 7px 20px rgba(47,68,112,.07) !important;
+    }
+    #filterPills button { border-radius: 999px !important; }
+    @media (prefers-reduced-motion: no-preference) {
+      main > header, section#tab-add > div, #tab-dashboard > div { animation: riseIn .38s ease both; }
+      @keyframes riseIn { from { opacity: .75; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    }
   </style>
 </head>
 <body class="bg-[#f2f5f8] min-h-screen text-slate-800 pb-32 font-sans selection:bg-sky-500 selection:text-white" onclick="closeAllCustomDropdowns(event)">
 
   <main class="max-w-md mx-auto p-3 space-y-4">
     <header class="flex items-center justify-between gap-2 py-1 px-1">
-      <h1 class="text-xl font-black text-slate-800 tracking-tight shrink-0">隨手比價</h1>
+      <h1 class="text-2xl font-black tracking-tight shrink-0">價</h1>
       <div class="flex items-center gap-1.5 shrink-0">
         <span id="cloudStatus" class="bg-sky-50 text-sky-600 text-[10px] sm:text-[11px] px-2 py-1 rounded-full font-bold flex items-center gap-1 border border-sky-100">
           <i data-lucide="cloud" class="w-3 h-3"></i> 同步
