@@ -97,6 +97,39 @@
       white-space: nowrap;
     }
     #cloudStatus, main > header button { box-shadow: 0 2px 7px rgba(15,23,42,.045); }
+
+    /* 小螢幕頂部排列：品牌標題獨立一行，功能按鈕另起一行，避免互相擠壓 */
+    @media (max-width: 420px) {
+      main > header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        row-gap: 9px !important;
+        padding: 10px 12px !important;
+      }
+      main > header h1 {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        margin: 0 0 0 4px !important;
+        font-size: 20px !important;
+      }
+      main > header h1 .brand-title { white-space: nowrap; }
+      main > header h1 .brand-subtitle {
+        font-size: 8px !important;
+        letter-spacing: .12em !important;
+      }
+      main > header > div {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+      }
+      #cloudStatus, main > header button {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+      }
+    }
     section#tab-add > div, #tab-dashboard > div, #tab-search > div:not(.relative) {
       border-radius: 25px !important;
       box-shadow: 0 8px 24px rgba(47, 68, 112, .075) !important;
