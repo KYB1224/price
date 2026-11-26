@@ -5,7 +5,7 @@
   <link rel="apple-touch-icon" href="https://i.meee.com.tw/HIs5Gp1.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>隨手比價 PWA</title>
+  <title>省錢研究所｜小錢大計畫</title>
   
   <!-- 跨平台全螢幕 PWA 核心設定 -->
   <!-- 替換成外部檔案連結 -->
@@ -15,13 +15,13 @@
   <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="價">
+  <meta name="apple-mobile-web-app-title" content="省錢研究所">
   <meta name="theme-color" content="#0284c7">
 
   <!-- iOS 專屬全螢幕獨立 App 模式設定 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="價">
+  <meta name="apple-mobile-web-app-title" content="省錢研究所">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -56,13 +56,45 @@
       box-shadow: 0 9px 26px rgba(57, 87, 140, .09), inset 0 1px 0 #fff;
     }
     main > header h1 {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
       width: auto; height: auto;
       padding: 0; border-radius: 0;
-      color: #1e293b; font-size: 20px; font-weight: 900;
+      color: #1e293b; font-size: 21px; font-weight: 900;
+      letter-spacing: .045em;
       background: transparent; box-shadow: none;
-      line-height: 1.25;
-      margin-left: 8px; /* 標題與卡片左緣保留呼吸空間 */
+      line-height: 1.15;
+      margin-left: 8px;
+    }
+    main > header h1 .brand-title {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    main > header h1 .brand-title strong {
+      font-weight: 950;
+      background: linear-gradient(100deg, #1e3a8a 0%, #2563eb 55%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    main > header h1 .brand-title em {
+      font-style: normal;
+      color: #334155;
+      font-weight: 850;
+    }
+    main > header h1 .brand-subtitle {
+      display: block;
+      color: #8492a8;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      line-height: 1.2;
+      white-space: nowrap;
     }
     #cloudStatus, main > header button { box-shadow: 0 2px 7px rgba(15,23,42,.045); }
     section#tab-add > div, #tab-dashboard > div, #tab-search > div:not(.relative) {
@@ -126,7 +158,10 @@
 
   <main class="max-w-md mx-auto p-3 space-y-4">
     <header class="flex items-center justify-between gap-2 py-1 px-1">
-      <h1 class="text-2xl font-black tracking-tight shrink-0">價</h1>
+      <h1 class="shrink-0" aria-label="小錢大計畫">
+        <span class="brand-title"><em>小錢</em><strong>大計畫</strong></span>
+        <span class="brand-subtitle">SMART SAVING · SMART BUYING</span>
+      </h1>
       <div class="flex items-center gap-1.5 shrink-0">
         <span id="cloudStatus" class="bg-sky-50 text-sky-600 text-[10px] sm:text-[11px] px-2 py-1 rounded-full font-bold flex items-center gap-1 border border-sky-100">
           <i data-lucide="cloud" class="w-3 h-3"></i> 同步

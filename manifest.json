@@ -1,10 +1,12 @@
 {
-  "name": "價",
-  "short_name": "價",
+  "name": "省錢研究所",
+  "short_name": "省錢研究所",
+  "description": "小錢大計畫｜家庭商品價格比較、追蹤與紀錄工具",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f9ff",
-  "theme_color": "#f7f9ff",
+  "background_color": "#f2f5f8",
+  "theme_color": "#f2f5f8",
   "icons": [
     {
       "src": "https://i.meee.com.tw/HIs5Gp1.png",
@@ -16,7 +18,7 @@
       "src": "https://i.meee.com.tw/HIs5Gp1.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
