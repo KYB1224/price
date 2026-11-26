@@ -6,7 +6,17 @@
   "background_color": "#f7f9ff",
   "theme_color": "#f7f9ff",
   "icons": [
-    {"src": "https://i.meee.com.tw/5zGhqqH.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "https://i.meee.com.tw/5zGhqqH.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+    {
+      "src": "https://i.meee.com.tw/HIs5Gp1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://i.meee.com.tw/HIs5Gp1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
