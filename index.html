@@ -98,37 +98,43 @@
     }
     #cloudStatus, main > header button { box-shadow: 0 2px 7px rgba(15,23,42,.045); }
 
-    /* 小螢幕頂部排列：品牌標題獨立一行，功能按鈕另起一行，避免互相擠壓 */
+    /* 小螢幕頂部維持單行：移除英文副標，為同步與操作按鈕保留空間 */
     @media (max-width: 420px) {
       main > header {
         display: flex !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         align-items: center !important;
-        justify-content: flex-start !important;
-        row-gap: 9px !important;
-        padding: 10px 12px !important;
+        justify-content: space-between !important;
+        column-gap: 6px !important;
+        padding: 9px 10px !important;
       }
       main > header h1 {
-        flex: 1 1 100% !important;
+        flex: 0 1 auto !important;
         min-width: 0 !important;
-        margin: 0 0 0 4px !important;
-        font-size: 20px !important;
-      }
-      main > header h1 .brand-title { white-space: nowrap; }
-      main > header h1 .brand-subtitle {
-        font-size: 8px !important;
-        letter-spacing: .12em !important;
+        margin: 0 0 0 2px !important;
+        font-size: 18px !important;
+        letter-spacing: .025em !important;
+        white-space: nowrap !important;
       }
       main > header > div {
-        flex: 1 1 100% !important;
+        flex: 0 0 auto !important;
         min-width: 0 !important;
-        justify-content: flex-end !important;
-        gap: 6px !important;
+        gap: 4px !important;
       }
-      #cloudStatus, main > header button {
+      #cloudStatus {
+        max-width: 106px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        font-size: 9px !important;
+      }
+      main > header button {
         flex-shrink: 0 !important;
         white-space: nowrap !important;
       }
+      #headerGroupLabel { display: none !important; }
     }
     section#tab-add > div, #tab-dashboard > div, #tab-search > div:not(.relative) {
       border-radius: 25px !important;
@@ -193,7 +199,6 @@
     <header class="flex items-center justify-between gap-2 py-1 px-1">
       <h1 class="shrink-0" aria-label="小錢大計畫">
         <span class="brand-title"><em>小錢</em><strong>大計畫</strong></span>
-        <span class="brand-subtitle">SMART SAVING · SMART BUYING</span>
       </h1>
       <div class="flex items-center gap-1.5 shrink-0">
         <span id="cloudStatus" class="bg-sky-50 text-sky-600 text-[10px] sm:text-[11px] px-2 py-1 rounded-full font-bold flex items-center gap-1 border border-sky-100">
